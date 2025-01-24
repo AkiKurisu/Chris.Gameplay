@@ -1,0 +1,21 @@
+{
+  "name": "com.kurisu.chris-modules",
+  "displayName": "Chris Modules",
+  "version": "1.2.2",
+  "unity": "2022.3",
+  "description": "Modules for Chirs framework.",
+  "keywords": [
+    "Framework",
+    "Gameplay",
+    "AI",
+    "Mod"
+  ],
+  "category": "Tools",
+  "author": {
+    "name": "AkiKurisu",
+    "url": "https://github.com/AkiKurisu"
+  },
+  "dependencies": {
+    "com.kurisu.chris": "1.2.2"
+  }
+}
