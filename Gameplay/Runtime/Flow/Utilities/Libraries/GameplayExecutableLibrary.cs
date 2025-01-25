@@ -13,7 +13,7 @@ namespace Chris.Gameplay.Flow.Utilities
     /// </summary>
     [Preserve]
     [CeresGroup("Gameplay")]
-    public class GameplayExecutableLibrary: ExecutableFunctionLibrary
+    public partial class GameplayExecutableLibrary: ExecutableFunctionLibrary
     {
         #region Subsystem
 
