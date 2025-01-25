@@ -5,13 +5,11 @@ using Chris.Gameplay.Audios;
 using Chris.Gameplay.FX;
 using Chris.Serialization;
 using UnityEngine;
-using UnityEngine.Scripting;
 namespace Chris.Gameplay.Flow.Utilities
 {
     /// <summary>
     /// Executable function library for Gameplay
     /// </summary>
-    [Preserve]
     [CeresGroup("Gameplay")]
     public partial class GameplayExecutableLibrary: ExecutableFunctionLibrary
     {
