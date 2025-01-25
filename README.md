@@ -33,6 +33,13 @@ To install modules, use git URL to download package by Unity Package Manager ```
 
 ![UIPanel](./Docs/Images/ui_panel_view.png)
 
+## Reference
+
+[Chris](https://github.com/AkiKurisu/Chris)
+
+[Ceres](https://github.com/AkiKurisu/Ceres)
+
+[AkiBT](https://github.com/AkiKurisu/AkiBT)
 
 ## License
 
