@@ -16,11 +16,13 @@ namespace Chris.UI
         /// Overwrite to set item order
         /// </summary>
         public int Order;
+        
         /// <summary>
         /// Panel item included fields
         /// </summary>
         public List<BaseField> Fields;
     }
+    
     /// <summary>
     /// Interface to create virtual panel item
     /// </summary>
@@ -33,6 +35,7 @@ namespace Chris.UI
         /// <param name="panelItem">Panel item slot that will be ordered</param>
         void CreatePanelItem(UIPanel panel, ref PanelItem panelItem);
     }
+    
     public class UIPanel : MonoBehaviour
     {
         /// <summary>

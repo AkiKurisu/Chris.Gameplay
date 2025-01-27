@@ -278,8 +278,9 @@ namespace Chris.Gameplay.FX
                     var ret1 = minMaxCurve.curveMin.GetMinValue();
                     var ret2 = minMaxCurve.curveMax.GetMinValue();
                     return ret1 < ret2 ? ret1 : ret2;
+                default:
+                    return -1f;
             }
-            return -1f;
         }
         
         private static float GetMaxValue(this AnimationCurve curve)
@@ -324,10 +325,8 @@ namespace Chris.Gameplay.FX
             {
                 return particle.main.startDelay.GetMaxValue() + particle.main.startLifetime.GetMaxValue();
             }
-            else
-            {
-                return particle.main.startDelay.GetMaxValue() + Mathf.Max(particle.main.duration, particle.main.startLifetime.GetMaxValue());
-            }
+
+            return particle.main.startDelay.GetMaxValue() + Mathf.Max(particle.main.duration, particle.main.startLifetime.GetMaxValue());
         }
     }
 }

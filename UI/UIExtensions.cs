@@ -15,6 +15,7 @@ namespace Chris.UI
         {
             return panel.Add(field);
         }
+        
         /// <summary>
         /// Add a field to a temporary panel slot item
         /// </summary>
@@ -28,6 +29,7 @@ namespace Chris.UI
             panelItem.Fields.Add(field);
             return field;
         }
+        
         /// <summary>
         /// Resize text automatically
         /// </summary>

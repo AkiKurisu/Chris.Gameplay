@@ -25,6 +25,7 @@ namespace Chris.AI.EQS
         
         public PostQueryParameters Parameters;
     }
+    
     public class PostQuerySystem : WorldSubsystem
     {
         [BurstCompile]
@@ -58,7 +59,7 @@ namespace Chris.AI.EQS
                     from = Target.Position + Command.Offset,
                     direction = math.rotate(rot, direction),
                     distance = Command.Parameters.distance,
-                    queryParameters = new QueryParameters() { layerMask = Command.LayerMask }
+                    queryParameters = new QueryParameters { layerMask = Command.LayerMask }
                 };
             }
         }
@@ -84,10 +85,12 @@ namespace Chris.AI.EQS
             {
                 return _posts.AsReadOnly();
             }
+            
             public void SetPending()
             {
                 HasPendingCommand = true;
             }
+            
             public void ExecuteCommand(ref PostQueryCommand command, ref NativeArray<ActorData> actorDatas)
             {
                 HasPendingCommand = false;
@@ -108,6 +111,7 @@ namespace Chris.AI.EQS
                 _jobHandle = job.Schedule(length, 32, default);
                 _jobHandle = RaycastCommand.ScheduleBatch(_raycastCommands, _hits, _raycastCommands.Length, _jobHandle);
             }
+            
             public void CompleteCommand()
             {
                 IsRunning = false;
@@ -133,17 +137,18 @@ namespace Chris.AI.EQS
                 _raycastCommands.DisposeSafe();
             }
         }
-        private readonly Queue<PostQueryCommand> commandBuffer = new();
         
-        private SchedulerHandle updateTickHandle;
+        private readonly Queue<PostQueryCommand> _commandBuffer = new();
         
-        private SchedulerHandle lateUpdateTickHandle;
+        private SchedulerHandle _updateTickHandle;
         
-        private NativeArray<ActorHandle> batchHandles;
+        private SchedulerHandle _lateUpdateTickHandle;
         
-        private int batchLength;
+        private NativeArray<ActorHandle> _batchHandles;
         
-        private readonly Dictionary<ActorHandle, PostQueryWorker> workerDic = new();
+        private int _batchLength;
+        
+        private readonly Dictionary<ActorHandle, PostQueryWorker> _workerDic = new();
         
         /// <summary>
         /// Set system parallel workers count
@@ -174,26 +179,27 @@ namespace Chris.AI.EQS
         protected override void Initialize()
         {
             Assert.IsFalse(FramePerTick <= 3);
-            Scheduler.WaitFrame(ref updateTickHandle, FramePerTick, ConsumeCommands, TickFrame.FixedUpdate, isLooped: true);
+            Scheduler.WaitFrame(ref _updateTickHandle, FramePerTick, ConsumeCommands, TickFrame.FixedUpdate, isLooped: true);
             // Allow job scheduled in 3 frames
-            Scheduler.WaitFrame(ref lateUpdateTickHandle, 3, CompleteCommands, TickFrame.FixedUpdate, isLooped: true);
-            lateUpdateTickHandle.Pause();
-            batchHandles = new NativeArray<ActorHandle>(MaxWorkerCount, Allocator.Persistent);
+            Scheduler.WaitFrame(ref _lateUpdateTickHandle, 3, CompleteCommands, TickFrame.FixedUpdate, isLooped: true);
+            _lateUpdateTickHandle.Pause();
+            _batchHandles = new NativeArray<ActorHandle>(MaxWorkerCount, Allocator.Persistent);
         }
+        
         private void ConsumeCommands(int _)
         {
             using (ConsumeCommandsPM.Auto())
             {
-                batchLength = 0;
+                _batchLength = 0;
                 var actorDatas = GetOrCreate<ActorQuerySystem>().GetAllActors(Allocator.Temp);
-                while (batchLength < MaxWorkerCount)
+                while (_batchLength < MaxWorkerCount)
                 {
-                    if (!commandBuffer.TryDequeue(out var command))
+                    if (!_commandBuffer.TryDequeue(out var command))
                     {
                         break;
                     }
 
-                    var worker = workerDic[command.Self];
+                    var worker = _workerDic[command.Self];
 
                     if (worker.IsRunning)
                     {
@@ -202,48 +208,51 @@ namespace Chris.AI.EQS
                     }
 
                     worker.ExecuteCommand(ref command, ref actorDatas);
-                    batchHandles[batchLength++] = command.Self;
+                    _batchHandles[_batchLength++] = command.Self;
                 }
                 actorDatas.Dispose();
             }
-            lateUpdateTickHandle.Resume();
+            _lateUpdateTickHandle.Resume();
         }
+        
         private void CompleteCommands(int _)
         {
             using (CompleteCommandsPM.Auto())
             {
-                for (int i = 0; i < batchLength; ++i)
+                for (int i = 0; i < _batchLength; ++i)
                 {
-                    workerDic[batchHandles[i]].CompleteCommand();
+                    _workerDic[_batchHandles[i]].CompleteCommand();
                 }
             }
-            lateUpdateTickHandle.Pause();
+            _lateUpdateTickHandle.Pause();
         }
 
         protected override void Release()
         {
-            batchHandles.Dispose();
-            updateTickHandle.Dispose();
-            lateUpdateTickHandle.Dispose();
-            foreach (var worker in workerDic.Values)
+            _batchHandles.Dispose();
+            _updateTickHandle.Dispose();
+            _lateUpdateTickHandle.Dispose();
+            foreach (var worker in _workerDic.Values)
             {
                 worker.Dispose();
             }
-            workerDic.Clear();
+            _workerDic.Clear();
         }
+        
         /// <summary>
         /// Enqueue a new <see cref="PostQueryCommand"/> to the system
         /// </summary>
         /// <param name="command"></param>
         public void EnqueueCommand(PostQueryCommand command)
         {
-            if (!workerDic.TryGetValue(command.Self, out var worker))
+            if (!_workerDic.TryGetValue(command.Self, out var worker))
             {
-                worker = workerDic[command.Self] = new();
+                worker = _workerDic[command.Self] = new();
             }
             worker.SetPending();
-            commandBuffer.Enqueue(command);
+            _commandBuffer.Enqueue(command);
         }
+        
         /// <summary>
         /// Get cached posts has found for target actor use latest command
         /// </summary>
@@ -251,10 +260,11 @@ namespace Chris.AI.EQS
         /// <returns></returns>
         public NativeArray<float3>.ReadOnly GetPosts(ActorHandle handle)
         {
-            if (workerDic.TryGetValue(handle, out var worker))
+            if (_workerDic.TryGetValue(handle, out var worker))
                 return worker.GetPosts();
             return default;
         }
+        
         /// <summary>
         /// Whether the worker for target actor is free to execute new command
         /// </summary>
@@ -262,7 +272,7 @@ namespace Chris.AI.EQS
         /// <returns></returns>
         public bool IsFree(ActorHandle handle)
         {
-            if (workerDic.TryGetValue(handle, out var worker))
+            if (_workerDic.TryGetValue(handle, out var worker))
                 return !worker.IsRunning && !worker.HasPendingCommand;
             return true;
         }

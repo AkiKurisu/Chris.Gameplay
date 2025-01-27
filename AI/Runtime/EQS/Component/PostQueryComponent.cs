@@ -20,8 +20,8 @@ namespace Chris.AI.EQS
         
         public LayerMask raycastLayerMask;
         
-        public Vector3 raycastOffset
-            ;
+        public Vector3 raycastOffset;
+        
         private PostQuerySystem _system;
         
         private void Start()
@@ -29,7 +29,7 @@ namespace Chris.AI.EQS
             _system = WorldSubsystem.GetOrCreate<PostQuerySystem>();
             if (_system == null)
             {
-                Debug.LogError($"[PostQueryComponent] Can not get PostQuerySystem dynamically.");
+                Debug.LogError("[PostQueryComponent] Can not get PostQuerySystem dynamically.");
             }
         }
         
@@ -71,7 +71,8 @@ namespace Chris.AI.EQS
         /// <returns></returns>
         public ReadOnlySpan<float3> GetPosts()
         {
-            return _system.GetPosts(GetActor().GetActorHandle()).AsReadOnlySpan();
+            var readonlyPosts = _system.GetPosts(GetActor().GetActorHandle());
+            return !readonlyPosts.IsCreated ? default(ReadOnlySpan<float3>) : readonlyPosts;
         }
     }
 }

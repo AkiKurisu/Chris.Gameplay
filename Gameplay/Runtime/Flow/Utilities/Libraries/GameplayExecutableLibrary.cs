@@ -33,25 +33,25 @@ namespace Chris.Gameplay.Flow.Utilities
 
         #region Audios
 
-        [ExecutableFunction, CeresLabel("Play 2D AudioClip")]
+        [ExecutableFunction, CeresLabel("Play 2D AudioClip"), CeresGroup("Gameplay/Audios")]
         public static void Flow_Play2DAudioClip(AudioClip audioClip, float volume = 1f)
         {
             AudioSystem.PlayClipAtPoint(audioClip, default, volume, 0);
         }
         
-        [ExecutableFunction, CeresLabel("Play 2D AudioClip from Address")]
+        [ExecutableFunction, CeresLabel("Play 2D AudioClip from Address"), CeresGroup("Gameplay/Audios")]
         public static void Flow_Play2DAudioClipFromAddress(string audioClipAddress, float volume = 1f)
         {
             AudioSystem.PlayClipAtPoint(audioClipAddress, default, volume, 0);
         }
         
-        [ExecutableFunction, CeresLabel("Play 3D AudioClip")]
+        [ExecutableFunction, CeresLabel("Play 3D AudioClip"), CeresGroup("Gameplay/Audios")]
         public static void Flow_Play3DAudioClip(AudioClip audioClip, Vector3 position, float volume = 1f, float spatialBlend = 1f, float minDistance = 10f)
         {
             AudioSystem.PlayClipAtPoint(audioClip, position, volume, spatialBlend, minDistance);
         }
         
-        [ExecutableFunction, CeresLabel("Play 3D AudioClip from Address")]
+        [ExecutableFunction, CeresLabel("Play 3D AudioClip from Address"), CeresGroup("Gameplay/Audios")]
         public static void Flow_Play3DAudioClipFromAddress(string audioClipAddress, Vector3 position, float volume = 1f, float spatialBlend = 1f, float minDistance = 10f)
         {
             AudioSystem.PlayClipAtPoint(audioClipAddress, position, volume, spatialBlend, minDistance);
@@ -61,16 +61,16 @@ namespace Chris.Gameplay.Flow.Utilities
 
         #region FX
         
-        [ExecutableFunction, CeresLabel("Play ParticleSystem")]
-        public static void Flow_PlayParticleSystem(GameObject prefab, Vector3 position, Vector3 eulerAngle, Transform parent = null, bool useLocalPosition = false)
+        [ExecutableFunction, CeresLabel("Play ParticleSystem"), CeresGroup("Gameplay/FX")]
+        public static void Flow_PlayParticleSystem(GameObject prefab, Vector3 position, Quaternion rotation, Transform parent = null, bool useLocalPosition = false)
         {
-            FXSystem.PlayFX(prefab, position, Quaternion.Euler(eulerAngle), parent, useLocalPosition);
+            FXSystem.PlayFX(prefab, position, rotation, parent, useLocalPosition);
         }
 
-        [ExecutableFunction, CeresLabel("Play ParticleSystem from Address")]
-        public static void Flow_PlayParticleSystemFromAddress(string prefabAddress, Vector3 position, Vector3 eulerAngle, Transform parent = null, bool useLocalPosition = false)
+        [ExecutableFunction, CeresLabel("Play ParticleSystem from Address"), CeresGroup("Gameplay/FX")]
+        public static void Flow_PlayParticleSystemFromAddress(string prefabAddress, Vector3 position, Quaternion rotation, Transform parent = null, bool useLocalPosition = false)
         {
-            FXSystem.PlayFX(prefabAddress, position, Quaternion.Euler(eulerAngle), parent, useLocalPosition);
+            FXSystem.PlayFX(prefabAddress, position, rotation, parent, useLocalPosition);
         }
         
         #endregion
