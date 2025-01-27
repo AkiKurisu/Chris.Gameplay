@@ -3,7 +3,9 @@ using Ceres.Graph.Flow.Annotations;
 using Ceres.Graph.Flow.Utilities;
 using Chris.Gameplay.Audios;
 using Chris.Gameplay.FX;
+using Chris.Gameplay.Level;
 using Chris.Serialization;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 namespace Chris.Gameplay.Flow.Utilities
 {
@@ -73,6 +75,22 @@ namespace Chris.Gameplay.Flow.Utilities
             FXSystem.PlayFX(prefabAddress, position, rotation, parent, useLocalPosition);
         }
         
+        #endregion
+
+        #region Level
+
+        [ExecutableFunction, CeresLabel("Load Level"), CeresGroup("Gameplay/Level")]
+        public static void Flow_LoadLevel(LevelReference levelReference)
+        {
+            LevelSystem.LoadAsync(levelReference).Forget();
+        }
+        
+        [ExecutableFunction, CeresLabel("Load Level from Name"), CeresGroup("Gameplay/Level")]
+        public static void Flow_LoadLevelFromName(string levelName)
+        {
+            LevelSystem.LoadAsync(levelName).Forget();
+        }
+
         #endregion
     }
 }

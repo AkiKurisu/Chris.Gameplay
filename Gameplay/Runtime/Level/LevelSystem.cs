@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Chris.DataDriven;
-using Chris.Resource;
 using Cysharp.Threading.Tasks;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
+
 namespace Chris.Gameplay.Level
 {
     public class LevelReference
@@ -14,6 +14,8 @@ namespace Chris.Gameplay.Level
         public string Name => Scenes.Length > 0 ? Scenes[0].levelName : string.Empty;
         
         public LevelSceneRow[] Scenes;
+        
+        public static readonly LevelReference Empty = new() { Scenes = Array.Empty<LevelSceneRow>() };
     }
 
     public sealed class LevelSceneDataTableManager : DataTableManager<LevelSceneDataTableManager>
@@ -52,14 +54,24 @@ namespace Chris.Gameplay.Level
                 Scenes = x.Value.ToArray()
             }).ToArray();
         }
+        
+        public LevelReference FindLevel(string levelName)
+        {
+            foreach (var level in LevelSceneDataTableManager.Get().GetLevelReferences())
+            {
+                if (level.Name == levelName)
+                {
+                    return level;
+                }
+            }
+            return LevelReference.Empty;
+        }
     }
     public static class LevelSystem
     {
-        public static readonly LevelReference EmptyLevel = new() { Scenes = Array.Empty<LevelSceneRow>() };
+        public static LevelReference LastLevel { get; private set; } = LevelReference.Empty;
         
-        public static LevelReference LastLevel { get; private set; } = EmptyLevel;
-        
-        public static LevelReference CurrentLevel { get; private set; } = EmptyLevel;
+        public static LevelReference CurrentLevel { get; private set; } = LevelReference.Empty;
         
         
         private static SceneInstance _mainScene;
@@ -109,14 +121,7 @@ namespace Chris.Gameplay.Level
 
         public static LevelReference FindLevel(string levelName)
         {
-            foreach (var level in LevelSceneDataTableManager.Get().GetLevelReferences())
-            {
-                if (level.Name == levelName)
-                {
-                    return level;
-                }
-            }
-            return EmptyLevel;
+            return LevelSceneDataTableManager.Get().FindLevel(levelName);
         }
     }
 }
