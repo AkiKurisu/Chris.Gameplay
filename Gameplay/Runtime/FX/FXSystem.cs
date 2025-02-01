@@ -136,7 +136,7 @@ namespace Chris.Gameplay.FX
     
     public sealed class PooledParticleSystem : PooledComponent<PooledParticleSystem, ParticleSystem>
     {
-        public new class ComponentCache : PooledComponent<PooledParticleSystem, ParticleSystem>.ComponentCache
+        private new class ComponentCache : PooledComponent<PooledParticleSystem, ParticleSystem>.ComponentCache
         {
             /// <summary>
             /// Particle system total duration
@@ -154,8 +154,8 @@ namespace Chris.Gameplay.FX
         
         public static async UniTask<PooledParticleSystem> InstantiateAsync(string address, Transform parent)
         {
-            var pooledParticleSystem = pool.Get();
-            PoolKey key = GetPooledKey(address);
+            var pooledParticleSystem = Pool.Get();
+            var key = GetPooledKey(address);
             pooledParticleSystem.PoolKey = key;
             var fxObject = GameObjectPoolManager.Get(key, out var metaData, parent, createEmptyIfNotExist: false);
             if (!fxObject)
@@ -187,11 +187,11 @@ namespace Chris.Gameplay.FX
             InitDisposables();
             Transform = GameObject.transform;
             Cache ??= new ComponentCache();
-            if (!Cache.component)
+            if (!Cache.Component)
             {
                 var particles = GameObject.GetComponentsInChildren<ParticleSystem>();
                 Assert.IsTrue(particles.Length > 0);
-                Cache.component = particles[0];
+                Cache.Component = particles[0];
                 ((ComponentCache)Cache).Duration = particles.GetDuration();
             }
             Assert.IsNotNull(Component);

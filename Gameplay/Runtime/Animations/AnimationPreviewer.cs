@@ -39,7 +39,7 @@ namespace Chris.Gameplay.Animations
         }
         #endregion Runtime Rreview
 
-        internal void Release()
+        private void Release()
         {
             _animationProxy?.Dispose();
         }

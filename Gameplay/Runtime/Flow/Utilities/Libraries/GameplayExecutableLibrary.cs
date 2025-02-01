@@ -58,6 +58,30 @@ namespace Chris.Gameplay.Flow.Utilities
         {
             AudioSystem.PlayClipAtPoint(audioClipAddress, position, volume, spatialBlend, minDistance);
         }
+        
+        [ExecutableFunction, CeresLabel("Schedule 3D AudioClip"), CeresGroup("Gameplay/Audios")]
+        public static void Flow_Schedule3DAudioClip(AudioClip audioClip, Vector3 position, float scheduleTime, float volume = 1f, float spatialBlend = 1f, float minDistance = 10f)
+        {
+            AudioSystem.ScheduleClipAtPoint(audioClip, position, scheduleTime, volume, spatialBlend, minDistance);
+        }
+        
+        [ExecutableFunction, CeresLabel("Schedule 3D AudioClip from Address"), CeresGroup("Gameplay/Audios")]
+        public static void Flow_Schedule3DAudioClipFromAddress(string audioClipAddress, Vector3 position, float scheduleTime, float volume = 1f, float spatialBlend = 1f, float minDistance = 10f)
+        {
+            AudioSystem.ScheduleClipAtPoint(audioClipAddress, position, scheduleTime, volume, spatialBlend, minDistance);
+        }
+
+        [ExecutableFunction, CeresLabel("Stop AudioClip"), CeresGroup("Gameplay/Audios")]
+        public static void Flow_StopAudioClip(AudioClip audioClip)
+        {
+            AudioSystem.StopAudioClip(audioClip);
+        }
+        
+        [ExecutableFunction, CeresLabel("Stop AudioClip from Address"), CeresGroup("Gameplay/Audios")]
+        public static void Flow_StopAudioClip(string audioClipAddress)
+        {
+            AudioSystem.StopAudioClip(audioClipAddress);
+        }
 
         #endregion
 
