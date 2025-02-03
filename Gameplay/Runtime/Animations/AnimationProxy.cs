@@ -1,4 +1,5 @@
 using System;
+using Ceres.Graph.Flow;
 using Ceres.Graph.Flow.Annotations;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -7,8 +8,9 @@ namespace Chris.Gameplay.Animations
 {
     /// <summary>
     /// Animation proxy can blend multi <see cref="RuntimeAnimatorController"/> 
-    /// and <see cref="AnimationClip"/> in hierarchy. 
+    /// and <see cref="AnimationClip"/> in hierarchy.
     /// </summary>
+    /// <remarks>Exposed to <see cref="FlowGraph"/>.</remarks>
     public partial class AnimationProxy : IDisposable
     {
         /// <summary>
@@ -117,19 +119,34 @@ namespace Chris.Gameplay.Animations
             int leafCount = Math.Max(1, contexts.Length);
             _leafMontages = new AnimationMontageNode[leafCount];
             _leafPlayables = new Playable[leafCount];
-            RootMontage = AnimationMontageNode.CreateChildOnlyMontage(sourcePlayableNode);
             if (context.Handle.IsValid() && contexts.Length > 0)
             {
                 var index = context.Descriptor.Index;
-                var layerMontage = AnimationMontageNode.CreateLayerMontage(RootMontage, context, contexts);
-                GetLeafPlayableRef(context.Handle) = sourcePlayableNode.Playable;
-                GetLeafMontageRef(context.Handle) = layerMontage.Children[index];
+                /* Initialize layer */
+                var array = new AnimationMontageNode[contexts.Length];
+                for (int i = 0; i < contexts.Length; ++i)
+                {
+                    if (index == i)
+                    {
+                        /* Append new montage to layer montage's children instead of
+                         creating empty montage and connect it to save one slot */
+                        array[i] = AnimationMontageNode.CreateMontage(sourcePlayableNode);
+                    }
+                    else
+                    {
+                        array[i] = AnimationMontageNode.CreateEmptyMontage(sourcePlayableNode.Graph);
+                    }
+                    GetLeafPlayableRef(contexts[i].Handle) = array[i].Playable;
+                    GetLeafMontageRef(contexts[i].Handle) = array[i];
+                }
+                var layerMontage = AnimationMontageNode.CreateLayerMontage(array, contexts);
                 RootMontage = layerMontage;
             }
             else
             {
-                GetLeafPlayableRef(default) = sourcePlayableNode.Playable;
-                GetLeafMontageRef(default) = RootMontage;
+                RootMontage = AnimationMontageNode.CreateMontage(sourcePlayableNode);
+                GetLeafPlayableRef() = sourcePlayableNode.Playable;
+                GetLeafMontageRef() = RootMontage;
             }
         }
         
@@ -315,6 +332,7 @@ namespace Chris.Gameplay.Animations
         /// Whether proxy override full body animation
         /// </summary>
         /// <returns></returns>
+        [ExecutableFunction]
         public bool IsFullBodyOverride()
         {
             /* Currently only root can be layer montage */
@@ -422,6 +440,7 @@ namespace Chris.Gameplay.Animations
         /// </summary>
         /// <param name="layerHandle"></param>
         /// <returns></returns>
+        [ExecutableFunction]
         public string GetLeafAnimationName(LayerHandle layerHandle = default)
         {
             var playable = GetLeafPlayable(layerHandle);
@@ -431,11 +450,9 @@ namespace Chris.Gameplay.Animations
             {
                 return GetAnimatorControllerInstanceProxy(layerHandle).GetAnimatorController().name;
             }
-            else
-            {
-                var proxy = GetAnimationClipInstanceProxy(layerHandle);
-                return proxy.GetAnimationClip().name;
-            }
+
+            var proxy = GetAnimationClipInstanceProxy(layerHandle);
+            return proxy.GetAnimationClip().name;
         }
         
         /// <summary>
@@ -444,6 +461,7 @@ namespace Chris.Gameplay.Animations
         /// <param name="layerHandle">Proxy layer</param>
         /// <param name="innerLayerIndex">Animator layer if leaf montage use animator controller</param>
         /// <returns></returns>
+        [ExecutableFunction]
         public float GetLeafAnimationNormalizedTime(LayerHandle layerHandle = default, int innerLayerIndex = DefaultLayerIndex)
         {
             var playable = GetLeafPlayable(layerHandle);
@@ -470,6 +488,7 @@ namespace Chris.Gameplay.Animations
         /// <param name="layerHandle">Proxy layer</param>
         /// <param name="innerLayerIndex">Animator layer if leaf montage use animator controller</param>
         /// <returns></returns>
+        [ExecutableFunction]
         public float GetLeafAnimationDuration(LayerHandle layerHandle = default, int innerLayerIndex = DefaultLayerIndex)
         {
             var playable = GetLeafPlayable(layerHandle);
@@ -494,6 +513,7 @@ namespace Chris.Gameplay.Animations
         /// </summary>
         /// <param name="layerHandle"></param>
         /// <returns></returns>
+        [ExecutableFunction]
         public AnimatorControllerInstanceProxy GetAnimatorControllerInstanceProxy(LayerHandle layerHandle = default)
         {
             AnimatorControllerPlayable playable = AnimatorControllerPlayable.Null;
@@ -511,6 +531,7 @@ namespace Chris.Gameplay.Animations
         /// </summary>
         /// <param name="layerHandle"></param>
         /// <returns></returns>
+        [ExecutableFunction]
         public AnimationClipInstanceProxy GetAnimationClipInstanceProxy(LayerHandle layerHandle = default)
         {
             AnimationClipPlayable playable = default;

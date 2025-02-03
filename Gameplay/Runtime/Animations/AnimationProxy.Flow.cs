@@ -10,9 +10,10 @@ namespace Chris.Gameplay.Animations
     {
         private readonly Dictionary<AnimationClip, SequenceTask> _runningSequences = new();
         
-        /* Following API only works on default layer */
         #region Flow API
         
+        /* Following API only works on default layer */
+        // ============================== Sequence ========================== //
         [ExecutableFunction]
         public void Flow_PlayAnimation(
             AnimationClip animationClip, 
@@ -61,6 +62,15 @@ namespace Chris.Gameplay.Animations
         public void Flow_StopAllAnimation()
         {
             StopAllAnimationSequences();
+        }
+        // ============================== Sequence ========================== //
+
+        [ExecutableFunction]
+        public LayerHandle Flow_CreateMontageLayer(string layerName, uint layerIndex = 0, bool additive = false, AvatarMask avatarMask = null)
+        {
+            LayerHandle handle = default;
+            CreateLayer(ref handle, layerName, layerIndex, additive, avatarMask);
+            return handle;
         }
         
         #endregion Flow API

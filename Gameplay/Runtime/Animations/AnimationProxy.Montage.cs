@@ -87,7 +87,7 @@ namespace Chris.Gameplay.Animations
                 // No optimized space
                 if (Playable.GetInputCount() < 2) return false;
                 // Not complete blend yet
-                return Playable.GetInputWeight(1) == 1 && Playable.GetInputWeight(0) == 0;
+                return Mathf.Approximately(Playable.GetInputWeight(1), 1) && Playable.GetInputWeight(0) == 0;
             }
             
             /// <summary>
@@ -170,14 +170,12 @@ namespace Chris.Gameplay.Animations
             /// <summary>
             /// Create layer montage
             /// </summary>
-            /// <param name="source"></param>
-            /// <param name="context"></param>
+            /// <param name="sources"></param>
             /// <param name="contexts"></param>
             /// <returns></returns>
-            public static AnimationLayerMontageNode CreateLayerMontage(AnimationMontageNode source, LayerContext context, LayerContext[] contexts)
+            public static AnimationLayerMontageNode CreateLayerMontage(AnimationMontageNode[] sources, LayerContext[] contexts)
             {
-                var playablePtr = source.Playable;
-                var graph = playablePtr.GetGraph();
+                var graph = sources[0].Playable.GetGraph();
                 var newMixer = AnimationLayerMixerPlayable.Create(graph, contexts.Length + 1);
                 var children = new AnimationMontageNode[contexts.Length];
 
@@ -187,34 +185,31 @@ namespace Chris.Gameplay.Animations
                 {
                     newMixer.SetInputWeight(1, 0);
                 }
+                
                 // Use layer to start blend in, so set original source to completed blend in
-                source.Blend(1);
-
-                var descriptor = context.Descriptor;
-
-                // Assign by input context
-                if (context.Handle.IsValid())
+                foreach (var source in sources)
                 {
-                    children[context.Descriptor.Index] = source;
-                    int inputPortIndex = (int)(context.Descriptor.Index + 1);
-                    graph.Connect(playablePtr, 0, newMixer, inputPortIndex);
-                    newMixer.SetLayerMaskFromAvatarMask(context.Descriptor.Index + 1, descriptor.AvatarMask);
-                    newMixer.SetLayerAdditive(context.Descriptor.Index + 1, descriptor.Additive);
-                }
-                else
-                {
-                    // No specific layer use default layer one
-                    // Notice that we start proxy layer from 1, since layer 0 is always placed with source animator controller
-                    children[0] = source;
-                    const int defaultInputPortIndex = 1;
-                    graph.Connect(playablePtr, 0, newMixer, defaultInputPortIndex);
+                    source.Blend(1);
                 }
 
+                // Fill child montage slot
+                for (int i = 0; i < contexts.Length; ++i)
+                {
+                    var descriptor = contexts[i].Descriptor;
+                    children[descriptor.Index] = sources[i];
+                    uint inputPort = descriptor.Index + 1;
+                    graph.Connect(sources[i].Playable, 0, newMixer, (int)inputPort);
+                    if (descriptor.AvatarMask)
+                    {
+                        newMixer.SetLayerMaskFromAvatarMask(inputPort, descriptor.AvatarMask);
+                    }
+                    newMixer.SetLayerAdditive(inputPort, descriptor.Additive);
+                }
 
-                return new AnimationLayerMontageNode(newMixer, source.AnimatorController)
+                return new AnimationLayerMontageNode(newMixer, null)
                 {
                     Parent = null,
-                    Child = source,
+                    Child = null,
                     Children = children
                 };
             }
@@ -224,7 +219,7 @@ namespace Chris.Gameplay.Animations
             /// </summary>
             /// <param name="source"></param>
             /// <returns></returns>
-            public static AnimationMontageNode CreateChildOnlyMontage(AnimationPlayableNode source)
+            public static AnimationMontageNode CreateMontage(AnimationPlayableNode source)
             {
                 var playablePtr = source.Playable;
                 var graph = playablePtr.GetGraph();
@@ -243,6 +238,21 @@ namespace Chris.Gameplay.Animations
                     Child = source
                 };
             }
+
+            /// <summary>
+            /// Create empty montage
+            /// </summary>
+            /// <param name="graph"></param>
+            /// <returns></returns>
+            public static AnimationMontageNode CreateEmptyMontage(PlayableGraph graph)
+            {
+                return new AnimationMontageNode(AnimationMixerPlayable.Create(graph, 2), null)
+                {
+                    Parent = null,
+                    Child = null
+                };
+            }
+            
             /// <summary>
             /// Create blendable montage from parent montage to child playable
             /// </summary>
@@ -261,12 +271,19 @@ namespace Chris.Gameplay.Animations
 
                 // Disconnect right leaf from leaf montage
                 graph.Disconnect(leafMontage, 1);
+                
                 // Current right leaf => New left leaf
-                graph.Connect(leafNode.Playable, 0, newMontage, 0);
+                if (leafNode != null)
+                {
+                    graph.Connect(leafNode.Playable, 0, newMontage, 0);
+                }
+                
                 // New right leaf
                 graph.Connect(playablePtr, 0, newMontage, 1);
+                
                 // Connect to parent
                 graph.Connect(newMontage, 0, leafMontage, 1);
+                
                 // Set weight
                 newMontage.SetInputWeight(0, 1);
                 newMontage.SetInputWeight(1, 0);
@@ -276,6 +293,7 @@ namespace Chris.Gameplay.Animations
                     Parent = parent,
                     Child = source
                 };
+                
                 // Link child
                 parent.Child = newMontageNode;
 
@@ -283,18 +301,22 @@ namespace Chris.Gameplay.Animations
             }
             #endregion Factory
         }
+        
         public class AnimationLayerMontageNode : AnimationMontageNode
         {
             public AnimationLayerMontageNode(Playable playable, RuntimeAnimatorController runtimeAnimatorController) : base(playable, runtimeAnimatorController)
             {
 
             }
+            
             public AnimationMontageNode[] Children;
+            
             public override bool CanShrink()
             {
                 /* Can not know whether any layer still need parent or not */
                 return false;
             }
+            
             public override void Blend(float weight)
             {
                 /* No need to blend out parent in layer montage since we always keep it in graph */

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Ceres.Graph.Flow.Annotations;
 using UnityEngine;
 using UnityEngine.Animations;
 using UAnimator = UnityEngine.Animator;
@@ -133,7 +134,7 @@ namespace Chris.Gameplay.Animations
                 }
                 LayerContexts.Remove(layerHandle);
             }
-            context = new LayerContext()
+            context = new LayerContext
             {
                 Handle = layerHandle,
                 Descriptor = layerDescriptor,
@@ -144,11 +145,7 @@ namespace Chris.Gameplay.Animations
         
         public LayerContext GetLayerContext(LayerHandle handle)
         {
-            if (LayerContexts.TryGetValue(handle, out var layerContext))
-            {
-                return layerContext;
-            }
-            return LayerContext.Empty;
+            return LayerContexts.TryGetValue(handle, out var layerContext) ? layerContext : LayerContext.Empty;
         }
         
         public LayerContext[] GetAllLayerContexts()
@@ -170,6 +167,7 @@ namespace Chris.Gameplay.Animations
         public readonly struct AnimationClipInstanceProxy
         {
             private readonly AnimationClipPlayable _clipPlayable;
+            
             internal AnimationClipInstanceProxy(AnimationClipPlayable playable)
             {
                 _clipPlayable = playable;
@@ -181,6 +179,7 @@ namespace Chris.Gameplay.Animations
             /// Returns the AnimationClip stored in the AnimationClipPlayable.
             /// </summary>
             /// <returns></returns>
+            [ExecutableFunction]
             public AnimationClip GetAnimationClip()
             {
                 return _clipPlayable.GetAnimationClip();
@@ -190,6 +189,7 @@ namespace Chris.Gameplay.Animations
             /// Returns the state of the ApplyFootIK flag.
             /// </summary>
             /// <returns></returns>
+            [ExecutableFunction]
             public bool GetApplyFootIK()
             {
                 return _clipPlayable.GetApplyFootIK();
@@ -199,6 +199,7 @@ namespace Chris.Gameplay.Animations
             ///  Sets the value of the ApplyFootIK flag.
             /// </summary>
             /// <param name="value"></param>
+            [ExecutableFunction]
             public void SetApplyFootIK(bool value)
             {
                 _clipPlayable.SetApplyFootIK(value);
@@ -208,6 +209,7 @@ namespace Chris.Gameplay.Animations
             /// Returns the state of the ApplyPlayableIK flag.
             /// </summary>
             /// <returns></returns>
+            [ExecutableFunction]
             public bool GetApplyPlayableIK()
             {
                 return _clipPlayable.GetApplyPlayableIK();
@@ -217,6 +219,7 @@ namespace Chris.Gameplay.Animations
             /// Requests OnAnimatorIK to be called on the animated GameObject.
             /// </summary>
             /// <param name="value"></param>
+            [ExecutableFunction]
             public void SetApplyPlayableIK(bool value)
             {
                 _clipPlayable.SetApplyPlayableIK(value);
@@ -244,218 +247,265 @@ namespace Chris.Gameplay.Animations
             
             #region Wrapper
             
+            [ExecutableFunction]
             public float GetFloat(string name)
             {
                 return _animatorPlayable.GetFloat(name);
             }
 
+            [ExecutableFunction]
             public float GetFloat(int id)
             {
                 return _animatorPlayable.GetFloat(id);
             }
             
+            [ExecutableFunction]
             public void SetFloat(string name, float value)
             {
                 _animatorPlayable.SetFloat(name, value);
             }
             
+            [ExecutableFunction]
             public void SetFloat(int id, float value)
             {
                 _animatorPlayable.SetFloat(id, value);
             }
             
+            [ExecutableFunction]
             public bool GetBool(string name)
             {
                 return _animatorPlayable.GetBool(name);
             }
             
+            [ExecutableFunction]
             public bool GetBool(int id)
             {
                 return _animatorPlayable.GetBool(id);
             }
             
+            [ExecutableFunction]
             public void SetBool(string name, bool value)
             {
                 _animatorPlayable.SetBool(name, value);
             }
 
+            [ExecutableFunction]
             public void SetBool(int id, bool value)
             {
                 _animatorPlayable.SetBool(id, value);
             }
 
+            [ExecutableFunction]
             public int GetInteger(string name)
             {
                 return _animatorPlayable.GetInteger(name);
             }
             
+            [ExecutableFunction]
             public int GetInteger(int id)
             {
                 return _animatorPlayable.GetInteger(id);
             }
             
+            [ExecutableFunction]
             public void SetInteger(string name, int value)
             {
                 _animatorPlayable.SetInteger(name, value);
             }
 
+            [ExecutableFunction]
             public void SetInteger(int id, int value)
             {
                 _animatorPlayable.SetInteger(id, value);
             }
+            
+            [ExecutableFunction]
             public void SetTrigger(string name)
             {
                 _animatorPlayable.SetTrigger(name);
             }
 
+            [ExecutableFunction]
             public void SetTrigger(int id)
             {
                 _animatorPlayable.SetTrigger(id);
             }
 
+            [ExecutableFunction]
             public void ResetTrigger(string name)
             {
                 _animatorPlayable.ResetTrigger(name);
             }
             
+            [ExecutableFunction]
             public void ResetTrigger(int id)
             {
                 _animatorPlayable.ResetTrigger(id);
             }
             
+            [ExecutableFunction]
             public bool IsParameterControlledByCurve(string name)
             {
                 return _animatorPlayable.IsParameterControlledByCurve(name);
             }
             
+            [ExecutableFunction]
             public bool IsParameterControlledByCurve(int id)
             {
                 return _animatorPlayable.IsParameterControlledByCurve(id);
             }
 
+            [ExecutableFunction]
             public int GetLayerCount()
             {
                 return _animatorPlayable.GetLayerCount();
             }
 
+            [ExecutableFunction]
             public string GetLayerName(int layerIndex)
             {
                 return _animatorPlayable.GetLayerName(layerIndex);
             }
 
+            [ExecutableFunction]
             public int GetLayerIndex(string layerName)
             {
                 return _animatorPlayable.GetLayerIndex(layerName);
             }
             
+            [ExecutableFunction]
             public float GetLayerWeight(int layerIndex)
             {
                 return _animatorPlayable.GetLayerWeight(layerIndex);
             }
             
+            [ExecutableFunction]
             public void SetLayerWeight(int layerIndex, float weight)
             {
                 _animatorPlayable.SetLayerWeight(layerIndex, weight);
             }
 
+            [ExecutableFunction]
             public AnimatorStateInfo GetCurrentAnimatorStateInfo(int layerIndex)
             {
                 return _animatorPlayable.GetCurrentAnimatorStateInfo(layerIndex);
             }
 
+            [ExecutableFunction]
             public AnimatorStateInfo GetNextAnimatorStateInfo(int layerIndex)
             {
                 return _animatorPlayable.GetNextAnimatorStateInfo(layerIndex);
             }
 
+            [ExecutableFunction]
             public AnimatorTransitionInfo GetAnimatorTransitionInfo(int layerIndex)
             {
                 return _animatorPlayable.GetAnimatorTransitionInfo(layerIndex);
             }
 
+            [ExecutableFunction]
             public AnimatorClipInfo[] GetCurrentAnimatorClipInfo(int layerIndex)
             {
                 return _animatorPlayable.GetCurrentAnimatorClipInfo(layerIndex);
             }
 
+            [ExecutableFunction]
             public void GetCurrentAnimatorClipInfo(int layerIndex, List<AnimatorClipInfo> clips)
             {
                 _animatorPlayable.GetCurrentAnimatorClipInfo(layerIndex, clips);
             }
 
+            [ExecutableFunction]
             public void GetNextAnimatorClipInfo(int layerIndex, List<AnimatorClipInfo> clips)
             {
                 _animatorPlayable.GetNextAnimatorClipInfo(layerIndex, clips);
             }
             
+            [ExecutableFunction]
             public int GetCurrentAnimatorClipInfoCount(int layerIndex)
             {
                 return _animatorPlayable.GetCurrentAnimatorClipInfoCount(layerIndex);
             }
             
+            [ExecutableFunction]
             public int GetNextAnimatorClipInfoCount(int layerIndex)
             {
                 return _animatorPlayable.GetNextAnimatorClipInfoCount(layerIndex);
             }
 
+            [ExecutableFunction]
             public AnimatorClipInfo[] GetNextAnimatorClipInfo(int layerIndex)
             {
                 return _animatorPlayable.GetNextAnimatorClipInfo(layerIndex);
             }
+            
+            [ExecutableFunction]
             public bool IsInTransition(int layerIndex)
             {
                 return _animatorPlayable.IsInTransition(layerIndex);
             }
 
+            [ExecutableFunction]
             public int GetParameterCount()
             {
                 return _animatorPlayable.GetParameterCount();
             }
 
+            [ExecutableFunction]
             public AnimatorControllerParameter GetParameter(int index)
             {
                 return _animatorPlayable.GetParameter(index);
             }
 
+            [ExecutableFunction]
             public void CrossFadeInFixedTime(string stateName, float transitionDuration, int layer = -1, float fixedTime = 0f)
             {
                 _animatorPlayable.CrossFadeInFixedTime(stateName, transitionDuration, layer, fixedTime);
             }
             
+            [ExecutableFunction]
             public void CrossFadeInFixedTime(int stateNameHash, float transitionDuration, int layer = -1, float fixedTime = 0.0f)
             {
                 _animatorPlayable.CrossFadeInFixedTime(stateNameHash, transitionDuration, layer, fixedTime);
             }
+            
+            [ExecutableFunction]
             public void CrossFade(string stateName, float transitionDuration, int layer = -1, float normalizedTime = float.NegativeInfinity)
             {
                 _animatorPlayable.CrossFade(stateName, transitionDuration, layer, normalizedTime);
             }
 
+            [ExecutableFunction]
             public void CrossFade(int stateNameHash, float transitionDuration, int layer = -1, float normalizedTime = float.NegativeInfinity)
             {
                 _animatorPlayable.CrossFade(stateNameHash, transitionDuration, layer, normalizedTime);
             }
             
+            [ExecutableFunction]
             public void PlayInFixedTime(string stateName, int layer = -1, float fixedTime = float.NegativeInfinity)
             {
                 _animatorPlayable.PlayInFixedTime(stateName, layer, fixedTime);
             }
 
+            [ExecutableFunction]
             public void PlayInFixedTime(int stateNameHash, int layer = -1, float fixedTime = float.NegativeInfinity)
             {
                 _animatorPlayable.PlayInFixedTime(stateNameHash, layer, fixedTime);
             }
 
+            [ExecutableFunction]
             public void Play(string stateName, int layer = -1, float normalizedTime = float.NegativeInfinity)
             {
                 _animatorPlayable.Play(stateName, layer, normalizedTime);
             }
 
+            [ExecutableFunction]
             public void Play(int stateNameHash, int layer = -1, float normalizedTime = float.NegativeInfinity)
             {
                 _animatorPlayable.Play(stateNameHash, layer, normalizedTime);
             }
 
+            [ExecutableFunction]
             public bool HasState(int layerIndex, int stateID)
             {
                 return _animatorPlayable.HasState(layerIndex, stateID);
