@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UEditor = UnityEditor.Editor;
@@ -17,6 +18,13 @@ namespace Chris.Gameplay.Animations.Editor
                 if (GUILayout.Button("Stop"))
                 {
                     Stop();
+                }
+                if (!Application.isPlaying)
+                {
+                    if (GUILayout.Button("Snapshot"))
+                    {
+                        Snapshot();
+                    }
                 }
             }
             else
@@ -62,6 +70,26 @@ namespace Chris.Gameplay.Animations.Editor
                 AnimationMode.EndSampling();
                 AnimationMode.StopAnimationMode();
             }
+        }
+        
+        private void Snapshot()
+        {
+            if (Application.isPlaying)
+            {
+                return;
+            }
+
+            var snapshots = Previewer.animator.GetComponentsInChildren<Transform>()
+                .Select(transform => (transform, transform.position, transform.rotation))
+                .ToArray();
+            AnimationMode.EndSampling();
+            AnimationMode.StopAnimationMode();
+            Undo.RecordObjects(snapshots.Select(x=> x.transform).OfType<Object>().ToArray(), "Snapshot");
+            foreach (var node in snapshots)
+            {
+                node.transform.SetPositionAndRotation(node.position, node.rotation);
+            }
+            EditorUtility.SetDirty(Previewer.animator.gameObject);
         }
     }
 }
