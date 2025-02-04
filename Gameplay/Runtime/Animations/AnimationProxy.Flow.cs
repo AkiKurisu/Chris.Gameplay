@@ -10,8 +10,10 @@ namespace Chris.Gameplay.Animations
     {
         private readonly Dictionary<AnimationClip, SequenceTask> _runningSequences = new();
         
-        /* Following API only works on default layer */
         #region Flow API
+        
+        // ============================== Sequence ========================== //
+        /* Following API only works on default layer */
         
         [ExecutableFunction]
         public void Flow_PlayAnimation(
@@ -62,6 +64,41 @@ namespace Chris.Gameplay.Animations
         {
             StopAllAnimationSequences();
         }
+        // ============================== Sequence ========================== //
+
+        // ============================== Montage ========================== //
+        [ExecutableFunction]
+        public LayerHandle Flow_CreateMontageLayer(string layerName, uint layerIndex = 0, bool additive = false, AvatarMask avatarMask = null)
+        {
+            LayerHandle handle = default;
+            CreateLayer(ref handle, layerName, layerIndex, additive, avatarMask);
+            return handle;
+        }
+        // ============================== Montage ========================== //
+        
+        // ============================== Event ========================== //
+        [ExecutableFunction]
+        public AnimationNotifier Flow_AddAnimationNotifier(int layer, float normalizedTime = -1, LayerHandle layerHandle = default, EventDelegate onNotify = null)
+        {
+            AnimationNotifier notifier;
+            AddNotifier(notifier = new AnimationNotifier(layer, normalizedTime), layerHandle);
+            Action onNotifyAction = onNotify;
+            RegisterNotifyCallback(evt =>
+            {
+                if (evt.Notifier == notifier)
+                {
+                    onNotifyAction?.Invoke();
+                }
+            });
+            return notifier;
+        }
+        
+        [ExecutableFunction]
+        public void Flow_RemoveAnimationNotifier(AnimationNotifier notifier, LayerHandle layerHandle = default)
+        {
+            RemoveNotifier(notifier, layerHandle);
+        }
+        // ============================== Event ========================== //
         
         #endregion Flow API
 

@@ -31,28 +31,22 @@ namespace Chris.Gameplay.Animations
     public class AnimationNotifier
     {
         /// <summary>
-        /// Notify name
-        /// </summary>
-        public readonly string Name;
-        
-        /// <summary>
         /// Animator layer to observe if montage use animator controller
         /// </summary>
-        public readonly int Layer;
+        public int Layer { get; }
         
         /// <summary>
         /// Normalized time to observe, do not observe time if less than zero
         /// </summary>
-        public readonly float NormalizedTime = -1;
+        public float NormalizedTime { get; } = -1;
         
         public AnimationNotifier()
         {
 
         }
         
-        public AnimationNotifier(string name, int layer = 0, float normalizedTime = -1)
+        public AnimationNotifier(int layer = 0, float normalizedTime = -1)
         {
-            Name = name;
             Layer = layer;
             NormalizedTime = normalizedTime;
         }
@@ -85,14 +79,14 @@ namespace Chris.Gameplay.Animations
     {
         public readonly int StateHash;
 
-        public AnimationNotifier_AnimationState(string name, string stateName, int layer = 0, float normalizedTime = -1)
-        : base(name, layer, normalizedTime)
+        public AnimationNotifier_AnimationState(string stateName, int layer = 0, float normalizedTime = -1)
+        : base(layer, normalizedTime)
         {
             StateHash = Animator.StringToHash(stateName);
         }
         
-        public AnimationNotifier_AnimationState(string name, int stateHash, int layer = 0, float normalizedTime = -1)
-        : base(name, layer, normalizedTime)
+        public AnimationNotifier_AnimationState(int stateHash, int layer = 0, float normalizedTime = -1)
+        : base(layer, normalizedTime)
         {
             StateHash = stateHash;
         }
@@ -143,7 +137,7 @@ namespace Chris.Gameplay.Animations
                 EventSystem.Instance.Dispatch(e, dispatchMode, MonoDispatchType.LateUpdate);
             }
             
-            public void SendEvent(EventBase e, DispatchMode dispatchMode = DispatchMode.Default, MonoDispatchType monoDispatchType = MonoDispatchType.LateUpdate)
+            public void SendEvent(EventBase e, DispatchMode dispatchMode, MonoDispatchType monoDispatchType)
             {
                 e.Target = this;
                 EventSystem.Instance.Dispatch(e, dispatchMode, monoDispatchType);
@@ -168,7 +162,7 @@ namespace Chris.Gameplay.Animations
         
         public void AddNotifier(AnimationNotifier animationNotifier, LayerHandle layerHandle = default)
         {
-            _notifierContexts.Add(new AnimationNotifierContext()
+            _notifierContexts.Add(new AnimationNotifierContext
             {
                 Notifier = animationNotifier,
                 LayerHandle = layerHandle,
@@ -180,12 +174,12 @@ namespace Chris.Gameplay.Animations
             }
         }
         
-        public void RemoveNotifier(string Name, LayerHandle layerHandle = default)
+        public void RemoveNotifier(AnimationNotifier notifier, LayerHandle layerHandle = default)
         {
             int inLayerIndex = GetLayerIndex(layerHandle);
             for (int i = _notifierContexts.Count - 1; i >= 0; i--)
             {
-                if (_notifierContexts[i].Notifier.Name == Name && GetLayerIndex(_notifierContexts[i].LayerHandle) == inLayerIndex)
+                if (_notifierContexts[i].Notifier == notifier && GetLayerIndex(_notifierContexts[i].LayerHandle) == inLayerIndex)
                 {
                     _notifierContexts.RemoveAt(i);
                     break;
@@ -228,7 +222,7 @@ namespace Chris.Gameplay.Animations
         private void DispatchStopEvent(float blendOutDuration)
         {
             using var evt = AnimationPreStopEvent.GetPooled(blendOutDuration);
-            GetEventHandler().SendEvent(evt, monoDispatchType: MonoDispatchType.Update);
+            GetEventHandler().SendEvent(evt, DispatchMode.Default, MonoDispatchType.Update);
         }
         
         private void DoStop(AnimationPreStopEvent preStopEvent)
