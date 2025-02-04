@@ -12,8 +12,9 @@ namespace Chris.Gameplay.Animations
         
         #region Flow API
         
-        /* Following API only works on default layer */
         // ============================== Sequence ========================== //
+        /* Following API only works on default layer */
+        
         [ExecutableFunction]
         public void Flow_PlayAnimation(
             AnimationClip animationClip, 
@@ -65,6 +66,7 @@ namespace Chris.Gameplay.Animations
         }
         // ============================== Sequence ========================== //
 
+        // ============================== Montage ========================== //
         [ExecutableFunction]
         public LayerHandle Flow_CreateMontageLayer(string layerName, uint layerIndex = 0, bool additive = false, AvatarMask avatarMask = null)
         {
@@ -72,6 +74,31 @@ namespace Chris.Gameplay.Animations
             CreateLayer(ref handle, layerName, layerIndex, additive, avatarMask);
             return handle;
         }
+        // ============================== Montage ========================== //
+        
+        // ============================== Event ========================== //
+        [ExecutableFunction]
+        public AnimationNotifier Flow_AddAnimationNotifier(int layer, float normalizedTime = -1, LayerHandle layerHandle = default, EventDelegate onNotify = null)
+        {
+            AnimationNotifier notifier;
+            AddNotifier(notifier = new AnimationNotifier(layer, normalizedTime), layerHandle);
+            Action onNotifyAction = onNotify;
+            RegisterNotifyCallback(evt =>
+            {
+                if (evt.Notifier == notifier)
+                {
+                    onNotifyAction?.Invoke();
+                }
+            });
+            return notifier;
+        }
+        
+        [ExecutableFunction]
+        public void Flow_RemoveAnimationNotifier(AnimationNotifier notifier, LayerHandle layerHandle = default)
+        {
+            RemoveNotifier(notifier, layerHandle);
+        }
+        // ============================== Event ========================== //
         
         #endregion Flow API
 

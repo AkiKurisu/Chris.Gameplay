@@ -262,7 +262,7 @@ namespace Chris.Gameplay.Animations
             public static AnimationMontageNode CreateMontage(AnimationMontageNode parent, AnimationPlayableNode source)
             {
                 var playablePtr = source.Playable;
-                var graph = parent.Graph;
+                var graph = playablePtr.GetGraph();
                 var leafMontage = parent.Playable;
                 var leafNode = parent.Child;
 

@@ -3,6 +3,7 @@ using Ceres.Graph.Flow;
 using Ceres.Graph.Flow.Annotations;
 using UnityEngine;
 using UnityEngine.Animations;
+using UnityEngine.Assertions;
 using UnityEngine.Playables;
 namespace Chris.Gameplay.Animations
 {
@@ -119,7 +120,7 @@ namespace Chris.Gameplay.Animations
             int leafCount = Math.Max(1, contexts.Length);
             _leafMontages = new AnimationMontageNode[leafCount];
             _leafPlayables = new Playable[leafCount];
-            if (context.Handle.IsValid() && contexts.Length > 0)
+            if (contexts.Length > 0)
             {
                 var index = context.Descriptor.Index;
                 /* Initialize layer */
@@ -136,8 +137,8 @@ namespace Chris.Gameplay.Animations
                     {
                         array[i] = AnimationMontageNode.CreateEmptyMontage(sourcePlayableNode.Graph);
                     }
-                    GetLeafPlayableRef(contexts[i].Handle) = array[i].Playable;
-                    GetLeafMontageRef(contexts[i].Handle) = array[i];
+                    _leafPlayables[i] = array[i].Playable;
+                    _leafMontages[i] = array[i];
                 }
                 var layerMontage = AnimationMontageNode.CreateLayerMontage(array, contexts);
                 RootMontage = layerMontage;
@@ -164,7 +165,7 @@ namespace Chris.Gameplay.Animations
                 PlayAnimatorInternal(animatorController, blendInDuration, layerHandle);
                 return;
             }
-            BlendAnimatorInternal(animatorController, blendInDuration);
+            BlendAnimatorInternal(animatorController, blendInDuration, layerHandle);
         }
         
         /// <summary>
@@ -196,8 +197,8 @@ namespace Chris.Gameplay.Animations
         protected void BlendAnimatorInternal(RuntimeAnimatorController animatorController, float blendInDuration = 0.25f, LayerHandle layerHandle = default)
         {
             GetLeafPlayableRef(layerHandle) = AnimatorControllerPlayable.Create(Graph, animatorController);
-            var node = new AnimationPlayableNode(GetLeafPlayableRef(layerHandle), animatorController);
-            GetLeafMontageRef(layerHandle) |= node;
+            Assert.IsNotNull(GetLeafMontage(layerHandle), $"[AnimationProxy] Montage has not been created in layer {layerHandle.Id} which is not expected");
+            GetLeafMontageRef(layerHandle) |= new AnimationPlayableNode(GetLeafPlayableRef(layerHandle), animatorController);
             var leafMontage = GetLeafMontage(layerHandle);
             if (blendInDuration > 0)
             {
@@ -224,7 +225,7 @@ namespace Chris.Gameplay.Animations
                 PlayAnimationClipInternal(animationClip, blendInDuration, layerHandle);
                 return;
             }
-            BlendAnimationClipInternal(animationClip, blendInDuration);
+            BlendAnimationClipInternal(animationClip, blendInDuration, layerHandle);
         }
         
         /// <summary>
@@ -256,7 +257,8 @@ namespace Chris.Gameplay.Animations
         protected void BlendAnimationClipInternal(AnimationClip animationClip, float blendInDuration = 0.25f, LayerHandle layerHandle = default)
         {
             GetLeafPlayableRef(layerHandle) = AnimationClipPlayable.Create(Graph, animationClip);
-            GetLeafMontageRef(layerHandle) |= new AnimationPlayableNode(GetLeafPlayableRef(layerHandle));
+            Assert.IsNotNull(GetLeafMontage(layerHandle), $"[AnimationProxy] Montage has not been created in layer {layerHandle.Id} which is not expected");
+            GetLeafMontageRef(layerHandle) |= new AnimationPlayableNode(GetLeafPlayable(layerHandle));
             var leafMontage = GetLeafMontage(layerHandle);
             if (blendInDuration > 0)
             {
@@ -300,6 +302,7 @@ namespace Chris.Gameplay.Animations
                 return;
             }
             GetLeafMontageRef(layerHandle) = node.Shrink();
+            Assert.IsNotNull(GetLeafMontage(layerHandle));
         }
         
         /// <summary>
@@ -465,6 +468,8 @@ namespace Chris.Gameplay.Animations
         public float GetLeafAnimationNormalizedTime(LayerHandle layerHandle = default, int innerLayerIndex = DefaultLayerIndex)
         {
             var playable = GetLeafPlayable(layerHandle);
+            Assert.IsTrue(playable.IsValid(), $"[AnimationProxy] Animation is invalid in layer {layerHandle.Id}");
+            
             if (innerLayerIndex < DefaultLayerIndex) innerLayerIndex = DefaultLayerIndex;
             float normalizedTime;
             if (playable.IsPlayableOfType<AnimatorControllerPlayable>())
@@ -492,6 +497,8 @@ namespace Chris.Gameplay.Animations
         public float GetLeafAnimationDuration(LayerHandle layerHandle = default, int innerLayerIndex = DefaultLayerIndex)
         {
             var playable = GetLeafPlayable(layerHandle);
+            Assert.IsTrue(playable.IsValid(), $"[AnimationProxy] Animation is invalid in layer {layerHandle.Id}");
+            
             if (innerLayerIndex < DefaultLayerIndex) innerLayerIndex = DefaultLayerIndex;
             float duration;
             if (playable.IsPlayableOfType<AnimatorControllerPlayable>())
