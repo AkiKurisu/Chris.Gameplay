@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.Playables;
+
 namespace Chris.Gameplay.Animations
 {
     /// <summary>
@@ -9,6 +11,9 @@ namespace Chris.Gameplay.Animations
         public Animator animator;
         
         public AnimationClip animationClip;
+        
+        [HideInInspector]
+        public float normalizedTime;
         
         private AnimationProxy _animationProxy;
         
@@ -22,12 +27,24 @@ namespace Chris.Gameplay.Animations
             Release();
         }
         
+        private void Release()
+        {
+            _animationProxy?.Dispose();
+        }
+        
         #region Runtime Rreview
+        
         public void Preview()
         {
             _animationProxy ??= new AnimationProxy(animator);
             _animationProxy.LoadAnimationClip(animationClip, 0);
         }
+
+        public void SetTime(float time)
+        {
+            _animationProxy.GetLeafPlayable().SetTime(time);
+        }
+        
         public void Stop()
         {
             _animationProxy.Stop(0);
@@ -35,13 +52,9 @@ namespace Chris.Gameplay.Animations
 
         public bool IsPlaying()
         {
-            return _animationProxy != null && _animationProxy.IsPlaying;
+            return _animationProxy is { IsPlaying: true };
         }
+        
         #endregion Runtime Rreview
-
-        private void Release()
-        {
-            _animationProxy?.Dispose();
-        }
     }
 }

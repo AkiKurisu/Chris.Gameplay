@@ -11,10 +11,19 @@ namespace Chris.Gameplay.Animations.Editor
         
         public override void OnInspectorGUI()
         {
+            var timeProp = serializedObject.FindProperty(nameof(AnimationPreviewer.normalizedTime));
             DrawDefaultInspector();
             GUI.enabled = Previewer.animationClip && Previewer.animator;
             if (IsPlaying())
             {
+                EditorGUI.BeginChangeCheck();
+                EditorGUILayout.Slider(timeProp, 0f, 1f, new GUIContent("Normalized Time"));
+                if (EditorGUI.EndChangeCheck())
+                {
+                    float time = timeProp.floatValue * Previewer.animationClip.length;
+                    SetTime(time);
+                    serializedObject.ApplyModifiedPropertiesWithoutUndo();
+                }
                 if (GUILayout.Button("Stop"))
                 {
                     Stop();
@@ -45,6 +54,18 @@ namespace Chris.Gameplay.Animations.Editor
             }
             return AnimationMode.InAnimationMode();
         }
+
+        private void SetTime(float time)
+        {
+            if (Application.isPlaying)
+            {
+                Previewer.SetTime(time);
+            }
+            else
+            {
+                AnimationMode.SampleAnimationClip(Previewer.animator.gameObject, Previewer.animationClip, time);
+            }
+        }
         
         private void Preview()
         {
@@ -55,7 +76,7 @@ namespace Chris.Gameplay.Animations.Editor
             else
             {
                 AnimationMode.StartAnimationMode();
-                AnimationMode.SampleAnimationClip(Previewer.animator.gameObject, Previewer.animationClip, 0);
+                AnimationMode.SampleAnimationClip(Previewer.animator.gameObject, Previewer.animationClip, Previewer.normalizedTime * Previewer.animationClip.length);
             }
         }
         
