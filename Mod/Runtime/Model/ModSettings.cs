@@ -9,7 +9,9 @@ namespace Chris.Mod
     public class ModSettings
     {
         public string LoadingPath { get; set; } = ImportConstants.LoadingPath;
+        
         public List<ModStateInfo> stateInfos = new();
+        
         public ModState GetModState(ModInfo modInfo)
         {
             if (TryGetStateInfo(modInfo, out var modStateInfo))
@@ -27,18 +29,20 @@ namespace Chris.Mod
             });
             return ModState.Enabled;
         }
+        
         public bool IsModActivated(ModInfo modInfo)
         {
             if (TryGetStateInfo(modInfo, out var modStateInfo))
                 return modStateInfo.modState == ModState.Enabled;
-            stateInfos.Add(new ModStateInfo()
+            stateInfos.Add(new ModStateInfo
             {
                 modFullName = modInfo.FullName,
                 modState = ModState.Enabled
             });
             return true;
         }
-        public void DelateMod(ModInfo modInfo, bool force = false)
+        
+        public void DeleteMod(ModInfo modInfo, bool force = false)
         {
             if (TryGetStateInfo(modInfo, out var modStateInfo))
             {
@@ -46,11 +50,13 @@ namespace Chris.Mod
                 else modStateInfo.modState = ModState.Delate;
             }
         }
+        
         public void SetModEnabled(ModInfo modInfo, bool isEnabled)
         {
             if (TryGetStateInfo(modInfo, out var modStateInfo))
                 modStateInfo.modState = isEnabled ? ModState.Enabled : ModState.Disabled;
         }
+        
         public bool TryGetStateInfo(ModInfo modInfo, out ModStateInfo modStateInfo)
         {
             foreach (var stateInfo in stateInfos)

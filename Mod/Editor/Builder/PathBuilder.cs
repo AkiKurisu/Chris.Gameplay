@@ -12,25 +12,25 @@ namespace Chris.Mod.Editor
 {
     public class PathBuilder : IModBuilder
     {
-        private bool buildRemoteCatalog;
+        private bool _buildRemoteCatalog;
         
-        private Dictionary<BundledAssetGroupSchema, bool> includeInBuildMap;
+        private Dictionary<BundledAssetGroupSchema, bool> _includeInBuildMap;
         
         public void Build(ModExportConfig exportConfig, string buildPath)
         {
             //Force enable remote catalog
-            buildRemoteCatalog = AddressableAssetSettingsDefaultObject.Settings.BuildRemoteCatalog;
+            _buildRemoteCatalog = AddressableAssetSettingsDefaultObject.Settings.BuildRemoteCatalog;
             AddressableAssetSettingsDefaultObject.Settings.BuildRemoteCatalog = true;
             AddressableAssetSettingsDefaultObject.Settings.RemoteCatalogBuildPath.SetVariableByName(AddressableAssetSettingsDefaultObject.Settings, AddressableAssetSettings.kRemoteBuildPath);
             AddressableAssetSettingsDefaultObject.Settings.RemoteCatalogLoadPath.SetVariableByName(AddressableAssetSettingsDefaultObject.Settings, AddressableAssetSettings.kRemoteLoadPath);
-            includeInBuildMap = new();
+            _includeInBuildMap = new Dictionary<BundledAssetGroupSchema, bool>();
             string groupName = exportConfig.Group.Name;
             foreach (var group in AddressableAssetSettingsDefaultObject.Settings.groups)
             {
                 if (group.HasSchema<BundledAssetGroupSchema>())
                 {
                     var schema = group.GetSchema<BundledAssetGroupSchema>();
-                    includeInBuildMap[schema] = schema.IncludeInBuild;
+                    _includeInBuildMap[schema] = schema.IncludeInBuild;
                     if (group.Name.StartsWith(groupName))
                     {
                         schema.IncludeInBuild = true;
@@ -51,7 +51,7 @@ namespace Chris.Mod.Editor
         public void Cleanup(ModExportConfig exportConfig)
         {
             //Reset build setting
-            AddressableAssetSettingsDefaultObject.Settings.BuildRemoteCatalog = buildRemoteCatalog;
+            AddressableAssetSettingsDefaultObject.Settings.BuildRemoteCatalog = _buildRemoteCatalog;
             //Exclude all mod groups
             string groupName = exportConfig.Group.Name;
             foreach (var group in AddressableAssetSettingsDefaultObject.Settings.groups)
@@ -65,11 +65,11 @@ namespace Chris.Mod.Editor
                     }
                     else
                     {
-                        schema.IncludeInBuild = includeInBuildMap[schema];
+                        schema.IncludeInBuild = _includeInBuildMap[schema];
                     }
                 }
             }
-            includeInBuildMap.Clear();
+            _includeInBuildMap.Clear();
             EditorUtility.SetDirty(AddressableAssetSettingsDefaultObject.Settings);
             AssetDatabase.SaveAssetIfDirty(AddressableAssetSettingsDefaultObject.Settings);
             {

@@ -10,10 +10,15 @@ namespace Chris.Mod.Editor
     public class ModExportWindow : EditorWindow
     {
         public delegate Vector2 BeginVerticalScrollViewFunc(Vector2 scrollPosition, bool alwaysShowVertical, GUIStyle verticalScrollbar, GUIStyle background, params GUILayoutOption[] options);
+        
         private static BeginVerticalScrollViewFunc s_func;
+        
         private Vector2 m_ScrollPosition;
+        
         private ModExportConfig exportConfig;
+        
         private SerializedObject exportConfigObject;
+        
         private static BeginVerticalScrollViewFunc BeginVerticalScrollView
         {
             get
@@ -27,14 +32,18 @@ namespace Chris.Mod.Editor
                 return s_func;
             }
         }
+        
         private static readonly FieldInfo m_UseCustomPaths = typeof(BundledAssetGroupSchema).GetField("m_UseCustomPaths", BindingFlags.Instance | BindingFlags.NonPublic);
+        
         private static string ConfigGUIDKey => Application.productName + "_ModConfigGUID";
+        
         [MenuItem("Tools/Chris/Mod Exporter")]
         public static void OpenEditor()
         {
             var window = GetWindow<ModExportWindow>("Mod Exporter");
             window.minSize = new Vector2(400, 300);
         }
+        
         private void OnGUI()
         {
             m_ScrollPosition = BeginVerticalScrollView(m_ScrollPosition, false, GUI.skin.verticalScrollbar, "OL Box");
@@ -88,6 +97,7 @@ namespace Chris.Mod.Editor
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
+        
         private void DrawExportConfig()
         {
             EditorGUI.BeginChangeCheck();
@@ -106,6 +116,7 @@ namespace Chris.Mod.Editor
                 exportConfigObject.ApplyModifiedProperties();
             }
         }
+        
         private void ShowExportEditor()
         {
             EditorGUILayout.HelpBox($"Export your Mod.\nCurrent Platform: {EditorUserBuildSettings.activeBuildTarget}", MessageType.Info);
@@ -151,6 +162,7 @@ namespace Chris.Mod.Editor
                 }
             }
         }
+        
         private static ModExportConfig LoadExportConfig()
         {
             var configs = AssetDatabase.FindAssets($"t:{typeof(ModExportConfig)}").Select(x => AssetDatabase.LoadAssetAtPath<ModExportConfig>(AssetDatabase.GUIDToAssetPath(x))).ToArray();
@@ -175,10 +187,10 @@ namespace Chris.Mod.Editor
             }
             return config;
         }
+        
         private static string GetGUID(Object asset)
         {
             return AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset));
         }
-
     }
 }

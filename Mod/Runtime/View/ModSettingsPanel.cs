@@ -15,12 +15,14 @@ namespace Chris.Mod.UI
             if (!ModAPI.IsModInit.Value) return;
             InitializeModPanel().Forget();
         }
-        protected async UniTask InitializeModPanel()
+
+        private async UniTask InitializeModPanel()
         {
             await UniTask.Yield();
             CreateFields();
             ModAPI.OnModRefresh.Subscribe(Refresh).AddTo(this);
         }
+        
         private void Refresh(Unit _)
         {
             ClearFields();
@@ -44,19 +46,19 @@ namespace Chris.Mod.UI
     public class ModConfigField : BaseField<int>
     {
         private static readonly IUIFactory DefaultFactory = new UIFactory();
-        
-        public class UIFactory : UIFactory<ModConfigField>
+
+        private class UIFactory : UIFactory<ModConfigField>
         {
 
         }
         
         public ModConfigField(string displayName, string[] optionNames = null, int initialValue = 0) : base(initialValue, DefaultFactory)
         {
-            DisplayName = displayName;
+            _displayName = displayName;
             _optionNames = optionNames;
         }
-        
-        public string DisplayName { get; }
+
+        private readonly string _displayName;
         
         private readonly string[] _optionNames;
         
@@ -66,7 +68,7 @@ namespace Chris.Mod.UI
         
         protected override GameObject OnCreateView(Transform parent)
         {
-            GameObject tr = Instantiate(parent);
+            var tr = Instantiate(parent);
             _toggles = tr.GetComponentsInChildren<Toggle>();
             _deleteButton = tr.GetComponentInChildren<Button>();
             (from item in _toggles.Select((val, idx) => new { val, idx })
@@ -100,7 +102,7 @@ namespace Chris.Mod.UI
                 });
             }
             Text text = tr.transform.Find("title").GetComponent<Text>();
-            text.text = DisplayName;
+            text.text = _displayName;
             return tr;
         }
         
