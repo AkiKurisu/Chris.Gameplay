@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Chris.Collections;
+using Chris.Gameplay.Resource;
 using Chris.Resource;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -12,7 +13,7 @@ namespace Chris.Gameplay.Audios
     /// </summary>
     public class VoiceCommand : IComparable<VoiceCommand>, IDisposable
     {
-        private static readonly ObjectPool<VoiceCommand> Pool = new(() => new VoiceCommand(), x => x.Reset());
+        private static readonly ObjectPool<VoiceCommand> Pool = new(() => new VoiceCommand(), command => command.Reset());
         
         public int Priority;
         
@@ -33,13 +34,15 @@ namespace Chris.Gameplay.Audios
         {
 
         }
-        public void Reset()
+
+        private void Reset()
         {
             Name = string.Empty;
             AudioClip = null;
             Reference = SoftAssetReference<AudioClip>.Empty;
             IsLoading = false;
         }
+        
         public static VoiceCommand Get(string name, SoftAssetReference<AudioClip> audioClip, int priority = -1, float volume = 0.5f)
         {
             var cmd = Pool.Get();
@@ -49,6 +52,7 @@ namespace Chris.Gameplay.Audios
             cmd.Volume = volume;
             return cmd;
         }
+        
         public static VoiceCommand Get(string name, AudioClip audioClip, int priority = -1, float volume = 0.5f)
         {
             var cmd = Pool.Get();
@@ -58,6 +62,7 @@ namespace Chris.Gameplay.Audios
             cmd.Volume = volume;
             return cmd;
         }
+        
         public async UniTask LoadAsync(ResourceCache<AudioClip> cache)
         {
             if (IsLoaded) return;
@@ -84,6 +89,7 @@ namespace Chris.Gameplay.Audios
             // TODO: Cancel asset loading
         }
     }
+    
     /// <summary>
     /// Class for managing character voice playing order
     /// </summary>
@@ -97,21 +103,32 @@ namespace Chris.Gameplay.Audios
         }
 
         private readonly PriorityQueue<VoiceCommand> _commandQueue = new();
+        
         private VoiceCommand _pendingCommand;
+        
         private VoiceCommand _playingCommand;
-        private readonly ResourceCache<AudioClip> _voiceCache = new();
+        
+        private readonly AudioClipCache _voiceCache = new();
         public VoiceStatus Status { get; private set; } = VoiceStatus.Stopped;
+        
         public bool IsPlaying => Status == VoiceStatus.Playing;
+        
         public bool IsStopped => Status == VoiceStatus.Stopped;
+        
         public bool IsPending => Status == VoiceStatus.Pending;
+        
         private readonly HashSet<string> _voiceStates = new();
+        
         private readonly AudioSource _audioSource;
+        
         private readonly int _maxCommandNum;
+        
         public VoiceProxy(AudioSource audioSource, int maxCommandNum = -1)
         {
             _audioSource = audioSource;
             _maxCommandNum = maxCommandNum;
         }
+        
         /// <summary>
         /// Enqueue a new voice command
         /// </summary>
@@ -128,11 +145,12 @@ namespace Chris.Gameplay.Audios
                 command.Dispose();
                 return;
             }
-            // Preinitialize if use soft asset reference
+            // Pre-initialize if use soft asset reference
             command.LoadAsync(_voiceCache).Forget();
             _commandQueue.Enqueue(command);
             _voiceStates.Add(command.Name);
         }
+        
         /// <summary>
         /// Get command left count
         /// </summary>
@@ -141,6 +159,7 @@ namespace Chris.Gameplay.Audios
         {
             return _commandQueue.Count();
         }
+        
         /// <summary>
         /// Tick command buffer
         /// </summary>
@@ -185,6 +204,7 @@ namespace Chris.Gameplay.Audios
                 ConsumeVoiceCommand(command);
             }
         }
+        
         /// <summary>
         /// Clear all commands and release memeory if possible
         /// </summary>
@@ -198,6 +218,7 @@ namespace Chris.Gameplay.Audios
             _commandQueue.Clear();
             _voiceCache.ReleaseAssetsAndUpdateVersion();
         }
+        
         private void StopPlayingCommand()
         {
             Status = VoiceStatus.Stopped;
@@ -205,6 +226,7 @@ namespace Chris.Gameplay.Audios
             _playingCommand.Dispose();
             _playingCommand = null;
         }
+        
         private void ConsumeVoiceCommand(VoiceCommand command)
         {
             _playingCommand = command;
@@ -213,6 +235,7 @@ namespace Chris.Gameplay.Audios
             _audioSource.Play();
             Status = VoiceStatus.Playing;
         }
+        
         public void Dispose()
         {
             _playingCommand?.Dispose();
