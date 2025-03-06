@@ -69,7 +69,7 @@ namespace Chris.Gameplay
         
         private const int InitialCapacity = 100;
         
-        internal readonly SparseList<Actor> ActorsInWorld = new(InitialCapacity, ActorHandle.MaxIndex);
+        internal readonly SparseArray<Actor> ActorsInWorld = new(InitialCapacity, ActorHandle.MaxIndex);
         
         internal readonly Subject<Unit> OnActorsUpdate = new();
         

@@ -57,7 +57,7 @@ namespace Chris.Gameplay.Level
         
         public LevelReference FindLevel(string levelName)
         {
-            foreach (var level in LevelSceneDataTableManager.Get().GetLevelReferences())
+            foreach (var level in GetLevelReferences())
             {
                 if (level.Name == levelName)
                 {
@@ -67,6 +67,7 @@ namespace Chris.Gameplay.Level
             return LevelReference.Empty;
         }
     }
+    
     public static class LevelSystem
     {
         public static LevelReference LastLevel { get; private set; } = LevelReference.Empty;
@@ -94,8 +95,8 @@ namespace Chris.Gameplay.Level
             bool hasDynamicScene = reference.Scenes.Any(x => x.loadMode == LoadLevelMode.Dynamic);
             if (singleScene == null)
             {
-                // Unload current main scene if have no dynamic scene
-                if (!hasDynamicScene && !_mainScene.Equals(default))
+                // Unload current main scene if there is no dynamic scene
+                if (!hasDynamicScene && _mainScene.Scene.IsValid())
                 {
                     await Addressables.UnloadSceneAsync(_mainScene).Task;
                 }

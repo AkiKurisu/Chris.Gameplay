@@ -12,16 +12,20 @@ namespace Chris.Mod
     public static class ModAPI
     {
         public static ReactiveProperty<bool> IsModInit { get; } = new(false);
+        
         public static Subject<Unit> OnModRefresh { get; } = new();
-        private static readonly List<ModInfo> modInfos = new();
-        private static ModSettings setting;
+        
+        private static readonly List<ModInfo> ModInfos = new();
+        
+        private static ModSettings _setting;
+        
         /// <summary>
         /// Initialize api and load all mods
         /// </summary>
         /// <param name="modSetting"></param>
-        /// <param name="modImporter"></param>
+        /// <param name="modLoader"></param>
         /// <returns></returns>
-        public static async UniTask Initialize(ModSettings modSetting, IModImporter modImporter = default)
+        public static async UniTask Initialize(ModSettings modSetting, IModLoader modLoader = default)
         {
             if (IsModInit.Value)
             {
@@ -29,14 +33,15 @@ namespace Chris.Mod
                 return;
             }
             Debug.Log("[Mod API] Initialize mod api...");
-            modImporter ??= new ModImporter(modSetting, new APIValidator(ImportConstants.APIVersion));
-            setting = modSetting;
-            if (await modImporter.LoadAllModsAsync(modInfos))
+            modLoader ??= new ModLoader(modSetting, new APIValidator(ImportConstants.APIVersion));
+            _setting = modSetting;
+            if (await modLoader.LoadAllModsAsync(ModInfos))
             {
-                setting.stateInfos.RemoveAll(x => !modInfos.Any(y => y.FullName == x.modFullName));
+                _setting.stateInfos.RemoveAll(x => ModInfos.All(y => y.FullName != x.modFullName));
                 IsModInit.Value = true;
             }
         }
+        
         /// <summary>
         /// Delete mod on next launch
         /// </summary>
@@ -48,12 +53,13 @@ namespace Chris.Mod
                 Debug.LogError("[Mod API] Mod api is not initialized");
                 return;
             }
-            if (setting.GetModState(modInfo) == ModState.Delate) return;
-            setting.DelateMod(modInfo);
-            modInfos.Remove(modInfo);
+            if (_setting.GetModState(modInfo) == ModState.Delate) return;
+            _setting.DeleteMod(modInfo);
+            ModInfos.Remove(modInfo);
             modInfo.Dispose();
             OnModRefresh.OnNext(Unit.Default);
         }
+        
         /// <summary>
         /// Enable mod on next launch
         /// </summary>
@@ -66,10 +72,11 @@ namespace Chris.Mod
                 Debug.LogError("[Mod API] Mod api is not initialized");
                 return;
             }
-            if (setting.GetModState(modInfo) == (isEnabled ? ModState.Enabled : ModState.Disabled)) return;
-            setting.SetModEnabled(modInfo, isEnabled);
+            if (_setting.GetModState(modInfo) == (isEnabled ? ModState.Enabled : ModState.Disabled)) return;
+            _setting.SetModEnabled(modInfo, isEnabled);
             OnModRefresh.OnNext(Unit.Default);
         }
+        
         /// <summary>
         /// Get mod state
         /// </summary>
@@ -82,8 +89,9 @@ namespace Chris.Mod
                 Debug.LogError("[Mod API] Mod api is not initialized");
                 return ModState.Disabled;
             }
-            return setting.GetModState(modInfo);
+            return _setting.GetModState(modInfo);
         }
+        
         /// <summary>
         /// Get all enabled mod infos
         /// </summary>
@@ -95,8 +103,9 @@ namespace Chris.Mod
                 Debug.LogError("[Mod API] Mod api is not initialized");
                 return new();
             }
-            return modInfos.ToList();
+            return ModInfos.ToList();
         }
+        
         /// <summary>
         /// Unzip all zip files from <see cref="path"/> 
         /// </summary>
@@ -111,6 +120,7 @@ namespace Chris.Mod
                 File.Delete(zip);
             }
         }
+        
         /// <summary>
         /// Delete mod files from disk, is not safe when is already initialized,
         /// recommend to use <see cref="DeleteMod"/> to delete mod on next launcher
@@ -120,6 +130,7 @@ namespace Chris.Mod
         {
             Directory.Delete(modInfo.FilePath, true);
         }
+        
         /// <summary>
         /// Load mod Addressables content catalog from path
         /// </summary>
@@ -143,6 +154,7 @@ namespace Chris.Mod
             File.WriteAllText(path, contentCatalog, Encoding.UTF8);
             return true;
         }
+        
         /// <summary>
         /// Load <see cref="ModInfo"/> from path
         /// </summary>

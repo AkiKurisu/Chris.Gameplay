@@ -1,49 +1,52 @@
-using System.IO;
 using System.Collections.Generic;
-using UnityEngine.AddressableAssets;
-using UnityEngine;
-using System.Text;
+using System.IO;
 using Cysharp.Threading.Tasks;
-using System.Linq;
-using Newtonsoft.Json;
+
 namespace Chris.Mod
 {
     public interface IModValidator
     {
-        bool IsValidAPIVersion(ModInfo modInfo);
+        bool ValidateMod(ModInfo modInfo);
     }
-    public interface IModImporter
+    
+    public interface IModLoader
     {
         UniTask<bool> LoadAllModsAsync(List<ModInfo> modInfos);
     }
+    
     public class APIValidator : IModValidator
     {
-        private readonly float apiVersion;
+        private readonly float _apiVersion;
+        
         public APIValidator(float apiVersion)
         {
-            this.apiVersion = apiVersion;
+            this._apiVersion = apiVersion;
         }
-        public bool IsValidAPIVersion(ModInfo modInfo)
+        public bool ValidateMod(ModInfo modInfo)
         {
             if (float.TryParse(modInfo.apiVersion, out var version2))
             {
-                return version2 >= apiVersion;
+                return version2 >= _apiVersion;
             }
             return false;
         }
     }
-    public class ModImporter : IModImporter
+    
+    public class ModLoader : IModLoader
     {
-        private readonly ModSettings modSettingData;
-        private readonly IModValidator validator;
-        public ModImporter(ModSettings modSettingData, IModValidator validator)
+        private readonly ModSettings _modSettingData;
+        
+        private readonly IModValidator _validator;
+        
+        public ModLoader(ModSettings modSettingData, IModValidator validator)
         {
-            this.modSettingData = modSettingData;
-            this.validator = validator;
+            _modSettingData = modSettingData;
+            _validator = validator;
         }
+        
         public async UniTask<bool> LoadAllModsAsync(List<ModInfo> modInfos)
         {
-            string modPath = modSettingData.LoadingPath;
+            string modPath = _modSettingData.LoadingPath;
             if (!Directory.Exists(modPath))
             {
                 Directory.CreateDirectory(modPath);
@@ -73,7 +76,7 @@ namespace Chris.Mod
             for (int i = configPaths.Count - 1; i >= 0; i--)
             {
                 var modInfo = await ModAPI.LoadModInfo(configPaths[i]);
-                var state = modSettingData.GetModState(modInfo);
+                var state = _modSettingData.GetModState(modInfo);
                 if (state == ModState.Enabled)
                 {
                     modInfos.Add(modInfo);
@@ -82,13 +85,11 @@ namespace Chris.Mod
                 {
                     directoryPaths.RemoveAt(i);
                     modInfos.Add(modInfo);
-                    continue;
                 }
                 else
                 {
                     ModAPI.DeleteModFromDisk(modInfo);
                     directoryPaths.RemoveAt(i);
-                    continue;
                 }
 
             }
@@ -98,6 +99,7 @@ namespace Chris.Mod
             }
             return true;
         }
+        
         public async UniTask<ModInfo> LoadModAsync(ModSettings settingData, string path)
         {
             var configs = Directory.GetFiles(path, "*.cfg");
@@ -107,7 +109,7 @@ namespace Chris.Mod
             var state = settingData.GetModState(modInfo);
             if (state == ModState.Enabled)
             {
-                if (!validator.IsValidAPIVersion(modInfo))
+                if (!_validator.ValidateMod(modInfo))
                 {
                     return modInfo;
                 }

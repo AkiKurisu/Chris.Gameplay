@@ -6,56 +6,57 @@ using R3;
 using UnityEngine.Networking;
 namespace Chris.Mod
 {
-    public class ModDownloader : IDisposable
+    public class ModDownloader : IDisposable, IProgress<float>
     {
-        public readonly Subject<float> onProgress = new();
-        public readonly Subject<Result> onComplete = new();
-        private readonly CancellationToken cancellationToken;
+        public Subject<float> OnProgress { get; }= new();
+
+        public Subject<Result> OnComplete { get; } = new();
+
+        private readonly CancellationToken _cancellationToken;
+        
         public ModDownloader(CancellationToken cancellationToken = default)
         {
-            this.cancellationToken = cancellationToken;
+            _cancellationToken = cancellationToken;
         }
-        public async UniTask DownloadMod(string url, string downloadPath)
+        
+        public async UniTask DownloadModAsync(string url, string downloadPath)
         {
             Result result = new();
             using UnityWebRequest request = UnityWebRequest.Get(new Uri(url).AbsoluteUri);
             request.downloadHandler = new DownloadHandlerFile(downloadPath);
             using UnityWebRequest www = UnityWebRequest.Get(new Uri(url).AbsoluteUri);
-            await www.SendWebRequest().ToUniTask(new Progress(this), cancellationToken: cancellationToken);
+            await www.SendWebRequest().ToUniTask(this, cancellationToken: _cancellationToken);
             string unzipFolder = Path.GetDirectoryName(downloadPath);
             if (!ZipWrapper.UnzipFile(downloadPath, unzipFolder))
             {
-                result.errorInfo = $"Can't unzip mod: {downloadPath}!";
+                result.ErrorInfo = $"Can't unzip mod: {downloadPath}!";
                 File.Delete(downloadPath);
-                result.downloadPath = downloadPath[..4];
-                onComplete.OnNext(result);
+                result.DownloadPath = downloadPath[..4];
+                OnComplete.OnNext(result);
                 return;
             }
-            result.success = true;
-            onComplete.OnNext(result);
+            result.Succeed = true;
+            OnComplete.OnNext(result);
         }
+        
+        void IProgress<float>.Report(float value)
+        {
+            OnProgress.OnNext(value);
+        }
+        
         public void Dispose()
         {
-            onProgress.Dispose();
-            onComplete.Dispose();
+            OnProgress.Dispose();
+            OnComplete.Dispose();
         }
+        
         public struct Result
         {
-            public string errorInfo;
-            public bool success;
-            public string downloadPath;
-        }
-        private readonly struct Progress : IProgress<float>
-        {
-            private readonly ModDownloader downloader;
-            public Progress(ModDownloader downloader)
-            {
-                this.downloader = downloader;
-            }
-            public void Report(float value)
-            {
-                downloader.onProgress.OnNext(value);
-            }
+            public string ErrorInfo;
+            
+            public bool Succeed;
+            
+            public string DownloadPath;
         }
     }
 }

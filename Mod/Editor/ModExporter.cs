@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -9,17 +10,20 @@ namespace Chris.Mod.Editor
 {
     public class ModExporter
     {
-        public readonly List<IModBuilder> builders;
-        public readonly ModExportConfig exportConfig;
+        private readonly List<IModBuilder> _builders;
+
+        private readonly ModExportConfig _exportConfig;
+        
         public ModExporter(ModExportConfig exportConfig)
         {
-            this.exportConfig = exportConfig;
-            builders = new List<IModBuilder>
+            _exportConfig = exportConfig;
+            _builders = new List<IModBuilder>
             {
                 new PathBuilder(),
             };
-            builders.AddRange(exportConfig.customBuilders);
+            _builders.AddRange(exportConfig.customBuilders);
         }
+        
         private static string CreateBuildPath(string modName)
         {
             var targetPath = Path.Combine(ExportConstants.ExportPath, EditorUserBuildSettings.activeBuildTarget.ToString());
@@ -29,9 +33,10 @@ namespace Chris.Mod.Editor
             Directory.CreateDirectory(buildPath);
             return buildPath;
         }
+        
         public bool Export()
         {
-            string buildPath = exportConfig.lastExportPath = CreateBuildPath(exportConfig.modName);
+            string buildPath = _exportConfig.lastExportPath = CreateBuildPath(_exportConfig.modName);
             BuildPipeline(buildPath);
             WritePipeline(buildPath);
             if (BuildContent())
@@ -46,60 +51,65 @@ namespace Chris.Mod.Editor
                 Log($"Export succeed, export path: {achievePath}");
                 return true;
             }
-            else
-            {
-                LogError($"Build pipeline failed!");
-                return false;
-            }
+
+            LogError($"Build pipeline failed!");
+            return false;
         }
+        
         private static void LogError(string message)
         {
             Debug.LogError($"<color=#ff2f2f>Exporter</color>: {message}");
         }
+        
         private static void Log(string message)
         {
             Debug.Log($"<color=#3aff48>Exporter</color>: {message}");
         }
+        
         private static bool ZipTogether(string buildPath, string zipPath)
         {
             return ZipWrapper.Zip(new string[1] { buildPath }, zipPath);
         }
+        
         private void WritePipeline(string buildPath)
         {
             var info = new ModInfo
             {
-                authorName = exportConfig.authorName,
-                description = exportConfig.description,
-                modName = exportConfig.modName,
-                version = exportConfig.version,
-                modIconBytes = exportConfig.modIcon != null ? exportConfig.modIcon.EncodeToPNG() : new byte[0] { },
+                authorName = _exportConfig.authorName,
+                description = _exportConfig.description,
+                modName = _exportConfig.modName,
+                version = _exportConfig.version,
+                modIconBytes = _exportConfig.modIcon != null ? _exportConfig.modIcon.EncodeToPNG() : Array.Empty<byte>(),
                 apiVersion = ImportConstants.APIVersion.ToString()
             };
-            foreach (var builder in builders)
+            foreach (var builder in _builders)
             {
                 builder.Write(ref info);
             }
             var stream = JsonConvert.SerializeObject(info);
             File.WriteAllText(buildPath + "/ModConfig.cfg", stream);
         }
+        
         private bool BuildContent()
         {
             AddressableAssetSettings.BuildPlayerContent(out AddressablesPlayerBuildResult result);
             CleanupPipeline();
             return string.IsNullOrEmpty(result.Error);
         }
+        
         private void BuildPipeline(string dynamicBuildPath)
         {
-            foreach (var builder in builders)
+            foreach (var builder in _builders)
             {
-                builder.Build(exportConfig, dynamicBuildPath);
+                builder.Build(_exportConfig, dynamicBuildPath);
             }
         }
+        
         private void CleanupPipeline()
         {
-            foreach (var builder in builders)
+            foreach (var builder in _builders)
             {
-                builder.Cleanup(exportConfig);
+                builder.Cleanup(_exportConfig);
             }
         }
     }

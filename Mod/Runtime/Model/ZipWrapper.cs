@@ -4,25 +4,25 @@ using System.IO;
 using UnityEngine;
 namespace Chris.Mod
 {
-    public class ZipWrapper
+    public static class ZipWrapper
     {
-        public static bool Zip(string[] _fileOrDirectoryArray, string _outputPathName, string _password = null)
+        public static bool Zip(string[] fileOrDirectoryArray, string outputPathName, string password = null)
         {
-            if ((null == _fileOrDirectoryArray) || string.IsNullOrEmpty(_outputPathName))
+            if ((null == fileOrDirectoryArray) || string.IsNullOrEmpty(outputPathName))
             {
 
                 return false;
             }
 
-            ZipOutputStream zipOutputStream = new(File.Create(_outputPathName));
+            ZipOutputStream zipOutputStream = new(File.Create(outputPathName));
             zipOutputStream.SetLevel(6);
-            if (!string.IsNullOrEmpty(_password))
-                zipOutputStream.Password = _password;
+            if (!string.IsNullOrEmpty(password))
+                zipOutputStream.Password = password;
 
-            for (int index = 0; index < _fileOrDirectoryArray.Length; ++index)
+            for (int index = 0; index < fileOrDirectoryArray.Length; ++index)
             {
                 bool result = false;
-                string fileOrDirectory = _fileOrDirectoryArray[index];
+                string fileOrDirectory = fileOrDirectoryArray[index];
                 if (Directory.Exists(fileOrDirectory))
                     result = ZipDirectory(fileOrDirectory, string.Empty, zipOutputStream);
                 else if (File.Exists(fileOrDirectory))
@@ -39,47 +39,49 @@ namespace Chris.Mod
 
             return true;
         }
-        public static bool UnzipFile(string _filePathName, string _outputPath, string _password = null)
+        
+        public static bool UnzipFile(string filePathName, string outputPath, string password = null)
         {
-            if (string.IsNullOrEmpty(_filePathName) || string.IsNullOrEmpty(_outputPath))
+            if (string.IsNullOrEmpty(filePathName) || string.IsNullOrEmpty(outputPath))
             {
                 return false;
             }
 
             try
             {
-                return UnzipFile(File.OpenRead(_filePathName), _outputPath, _password);
+                return UnzipFile(File.OpenRead(filePathName), outputPath, password);
             }
-            catch (Exception _e)
+            catch (Exception e)
             {
-                Debug.LogError("[ZipWrapper]: " + _e.ToString());
+                Debug.LogError("[ZipWrapper]: " + e);
 
                 return false;
             }
         }
-        public static bool UnzipFile(byte[] _fileBytes, string _outputPath, string _password = null)
+        
+        public static bool UnzipFile(byte[] fileBytes, string outputPath, string password = null)
         {
-            if ((null == _fileBytes) || string.IsNullOrEmpty(_outputPath))
+            if ((null == fileBytes) || string.IsNullOrEmpty(outputPath))
             {
                 return false;
             }
 
-            bool result = UnzipFile(new MemoryStream(_fileBytes), _outputPath, _password);
+            bool result = UnzipFile(new MemoryStream(fileBytes), outputPath, password);
             return result;
         }
 
-        public static bool UnzipFile(Stream _inputStream, string _outputPath, string _password = null)
+        public static bool UnzipFile(Stream inputStream, string outputPath, string password = null)
         {
-            if ((null == _inputStream) || string.IsNullOrEmpty(_outputPath))
+            if ((null == inputStream) || string.IsNullOrEmpty(outputPath))
             {
                 return false;
             }
 
-            if (!Directory.Exists(_outputPath))
-                Directory.CreateDirectory(_outputPath);
-            using ZipInputStream zipInputStream = new(_inputStream);
-            if (!string.IsNullOrEmpty(_password))
-                zipInputStream.Password = _password;
+            if (!Directory.Exists(outputPath))
+                Directory.CreateDirectory(outputPath);
+            using ZipInputStream zipInputStream = new(inputStream);
+            if (!string.IsNullOrEmpty(password))
+                zipInputStream.Password = password;
 
 
             ZipEntry entry;
@@ -88,7 +90,7 @@ namespace Chris.Mod
                 if (string.IsNullOrEmpty(entry.Name))
                     continue;
 
-                string filePathName = Path.Combine(_outputPath, entry.Name);
+                string filePathName = Path.Combine(outputPath, entry.Name);
 
                 if (entry.IsDirectory)
                 {
@@ -111,39 +113,39 @@ namespace Chris.Mod
                         }
                     }
                 }
-                catch (Exception _e)
+                catch (Exception e)
                 {
-                    Debug.LogError("[ZipWrapper]: " + _e.ToString());
+                    Debug.LogError("[ZipWrapper]: " + e);
                     return false;
                 }
             }
             return true;
         }
 
-        private static bool ZipFile(string _filePathName, string _parentRelPath, ZipOutputStream _zipOutputStream)
+        private static bool ZipFile(string filePathName, string parentRelPath, ZipOutputStream zipOutputStream)
         {
             FileStream fileStream = null;
             try
             {
-                string entryName = _parentRelPath + '/' + Path.GetFileName(_filePathName);
+                string entryName = parentRelPath + '/' + Path.GetFileName(filePathName);
                 ZipEntry entry = new(entryName)
                 {
                     DateTime = DateTime.Now
                 };
 
-                fileStream = File.OpenRead(_filePathName);
+                fileStream = File.OpenRead(filePathName);
                 byte[] buffer = new byte[fileStream.Length];
                 fileStream.Read(buffer, 0, buffer.Length);
                 fileStream.Close();
 
                 entry.Size = buffer.Length;
 
-                _zipOutputStream.PutNextEntry(entry);
-                _zipOutputStream.Write(buffer, 0, buffer.Length);
+                zipOutputStream.PutNextEntry(entry);
+                zipOutputStream.Write(buffer, 0, buffer.Length);
             }
-            catch (Exception _e)
+            catch (Exception e)
             {
-                Debug.LogError("[ZipWrapper]: " + _e.ToString());
+                Debug.LogError("[ZipWrapper]: " + e);
                 return false;
             }
             finally
@@ -158,21 +160,21 @@ namespace Chris.Mod
             return true;
         }
 
-        private static bool ZipDirectory(string _path, string _parentRelPath, ZipOutputStream _zipOutputStream)
+        private static bool ZipDirectory(string path, string parentRelPath, ZipOutputStream zipOutputStream)
         {
             try
             {
-                string entryName = Path.Combine(_parentRelPath, Path.GetFileName(_path) + '/');
+                string entryName = Path.Combine(parentRelPath, Path.GetFileName(path) + '/');
                 ZipEntry entry = new(entryName)
                 {
                     DateTime = DateTime.Now,
                     Size = 0
                 };
 
-                _zipOutputStream.PutNextEntry(entry);
-                _zipOutputStream.Flush();
+                zipOutputStream.PutNextEntry(entry);
+                zipOutputStream.Flush();
 
-                string[] files = Directory.GetFiles(_path);
+                string[] files = Directory.GetFiles(path);
                 for (int index = 0; index < files.Length; ++index)
                 {
                     if (files[index].EndsWith(".meta") == true)
@@ -181,7 +183,7 @@ namespace Chris.Mod
                         continue;
                     }
 
-                    ZipFile(files[index], Path.Combine(_parentRelPath, Path.GetFileName(_path)), _zipOutputStream);
+                    ZipFile(files[index], Path.Combine(parentRelPath, Path.GetFileName(path)), zipOutputStream);
                 }
             }
             catch (Exception _e)
@@ -190,10 +192,10 @@ namespace Chris.Mod
                 return false;
             }
 
-            string[] directories = Directory.GetDirectories(_path);
+            string[] directories = Directory.GetDirectories(path);
             for (int index = 0; index < directories.Length; ++index)
             {
-                if (!ZipDirectory(directories[index], Path.Combine(_parentRelPath, Path.GetFileName(_path)), _zipOutputStream))
+                if (!ZipDirectory(directories[index], Path.Combine(parentRelPath, Path.GetFileName(path)), zipOutputStream))
                 {
                     return false;
                 }

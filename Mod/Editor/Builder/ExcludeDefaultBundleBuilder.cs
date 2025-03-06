@@ -10,17 +10,17 @@ namespace Chris.Mod.Editor
     {
         public override string Description => "Exclude default group bundle from build.";
         
-        private AddressableAssetGroup defaultGroup;
+        private AddressableAssetGroup _defaultGroup;
         
         public override void Build(ModExportConfig exportConfig, string buildPath)
         {
-            defaultGroup = AddressableAssetSettingsDefaultObject.Settings.groups.FirstOrDefault(x => !x.HasSchema<BundledAssetGroupSchema>());
-            if (defaultGroup) AddressableAssetSettingsDefaultObject.Settings.groups.Remove(defaultGroup);
+            _defaultGroup = AddressableAssetSettingsDefaultObject.Settings.groups.FirstOrDefault(x => !x.HasSchema<BundledAssetGroupSchema>());
+            if (_defaultGroup) AddressableAssetSettingsDefaultObject.Settings.groups.Remove(_defaultGroup);
         }
         
         public override void Cleanup(ModExportConfig exportConfig)
         {
-            if (defaultGroup) AddressableAssetSettingsDefaultObject.Settings.groups.Insert(0, defaultGroup);
+            if (_defaultGroup) AddressableAssetSettingsDefaultObject.Settings.groups.Insert(0, _defaultGroup);
         }
     }
 }
