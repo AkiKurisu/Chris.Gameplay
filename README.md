@@ -2,7 +2,7 @@
 
 # Chris Modules
 
-Modules for [Chris](https://github.com/AkiKurisu/Chris) framework.
+Gameplay modules for [Chris](https://github.com/AkiKurisu/Chris) framework.
 
 </div>
 
@@ -12,7 +12,7 @@ To install modules, use git URL to download package by Unity Package Manager ```
 ## Features
 
 [Gameplay](./Documentation~/Gameplay.md)
->Based on Ceres to integrate visual scripting and C#. Also contains some tools that may be useful.
+>Based on Ceres to integrate visual scripting and C#.
 
 ![Visual Scripting](./Documentation~/Images/visual_scripting.png)
 

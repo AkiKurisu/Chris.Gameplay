@@ -47,7 +47,7 @@ namespace Chris.Gameplay
         {
             _container.Register(instance);
             var type = typeof(T);
-            if (_typeCallbackMap.TryGetValue(type, out Action<object> callBack))
+            if (_typeCallbackMap.TryGetValue(type, out var callBack))
             {
                 callBack?.Invoke(instance);
             }

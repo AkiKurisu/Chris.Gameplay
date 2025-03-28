@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using Chris.Collections;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using Unity.Profiling;
+
 namespace Chris.Gameplay
 {
     /// <summary>

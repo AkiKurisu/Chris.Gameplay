@@ -83,7 +83,7 @@ namespace Chris.AI.EQS
                 Physics.Linecast(fromPosition, target, out RaycastHit hit, layerMask);
                 if (hit.collider != null)
                 {
-                    if (FrameworkUtils.CompareTags(hit.collider, filterTags) == false)
+                    if (hit.collider.CompareTags(filterTags) == false)
                     {
                         Debug.DrawLine(hit.point, fromPosition, Color.cyan);
                         isVisible = false;

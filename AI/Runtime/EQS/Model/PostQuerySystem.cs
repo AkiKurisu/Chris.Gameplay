@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Chris.Collections;
 using Chris.Gameplay;
 using Chris.Schedulers;
 using Unity.Collections;
@@ -8,6 +9,7 @@ using UnityEngine;
 using Unity.Burst;
 using Unity.Profiling;
 using UnityEngine.Assertions;
+
 namespace Chris.AI.EQS
 {
     /// <summary>
@@ -97,7 +99,7 @@ namespace Chris.AI.EQS
                 IsRunning = true;
                 int length = command.Parameters.step * command.Parameters.depth;
                 _raycastCommands.DisposeSafe();
-                _raycastCommands = new(length, Allocator.TempJob);
+                _raycastCommands = new NativeArray<RaycastCommand>(length, Allocator.TempJob);
                 _hits.DisposeSafe();
                 _hits = new(length, Allocator.TempJob);
                 var job = new PrepareCommandJob()
@@ -172,9 +174,9 @@ namespace Chris.AI.EQS
         /// </summary>
         public const int DefaultFramePerTick = 25;
         
-        private static readonly ProfilerMarker ConsumeCommandsPM = new("PostQuerySystem.ConsumeCommands");
+        private static readonly ProfilerMarker ConsumeCommandsProfilerMarker = new("PostQuerySystem.ConsumeCommands");
         
-        private static readonly ProfilerMarker CompleteCommandsPM = new("PostQuerySystem.CompleteCommands");
+        private static readonly ProfilerMarker CompleteCommandsProfilerMarker = new("PostQuerySystem.CompleteCommands");
         
         protected override void Initialize()
         {
@@ -188,7 +190,7 @@ namespace Chris.AI.EQS
         
         private void ConsumeCommands(int _)
         {
-            using (ConsumeCommandsPM.Auto())
+            using (ConsumeCommandsProfilerMarker.Auto())
             {
                 _batchLength = 0;
                 var actorDatas = GetOrCreate<ActorQuerySystem>().GetAllActors(Allocator.Temp);
@@ -217,7 +219,7 @@ namespace Chris.AI.EQS
         
         private void CompleteCommands(int _)
         {
-            using (CompleteCommandsPM.Auto())
+            using (CompleteCommandsProfilerMarker.Auto())
             {
                 for (int i = 0; i < _batchLength; ++i)
                 {

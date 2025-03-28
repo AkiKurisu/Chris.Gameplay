@@ -8,9 +8,12 @@ namespace Chris.AI.Editor
     [CustomPropertyDrawer(typeof(BehaviorTask))]
     public class BehaviorTaskDrawer : PropertyDrawer
     {
-        private static Color ColorGreen = new(170 / 255f, 255 / 255f, 97 / 255f);
-        private static Color ColorBlue = new(140 / 255f, 160 / 255f, 250 / 255f);
-        private static Color ColorYellow = new(255 / 255f, 244 / 255f, 94 / 255f);
+        private static readonly Color ColorGreen = new(170 / 255f, 255 / 255f, 97 / 255f);
+        
+        private static readonly Color ColorBlue = new(140 / 255f, 160 / 255f, 250 / 255f);
+        
+        private static readonly Color ColorYellow = new(255 / 255f, 244 / 255f, 94 / 255f);
+        
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(position, label, property);
@@ -41,12 +44,14 @@ namespace Chris.AI.Editor
             GUI.enabled = true;
             EditorGUI.EndProperty();
         }
-        private Color GetStatusColor(TaskStatus taskStatus)
+        
+        private static Color GetStatusColor(TaskStatus taskStatus)
         {
             if (taskStatus == TaskStatus.Running) return ColorGreen;
             if (taskStatus == TaskStatus.Completed) return ColorBlue;
-            else return ColorYellow;
+            return ColorYellow;
         }
+        
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var startOnEnabled = property.FindPropertyRelative("startOnEnabled").boolValue;
