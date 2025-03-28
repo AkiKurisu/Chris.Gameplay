@@ -1,14 +1,16 @@
 using System.Linq;
-using Chris.Tasks.Editor;
 using UnityEditor;
 using UnityEngine;
+using UEditor = UnityEditor.Editor;
+
 namespace Chris.AI.Editor
 {
-    [CustomEditor(typeof(AIController), true)]
     [CanEditMultipleObjects]
-    public class AIControllerEditor : UnityEditor.Editor
+    [CustomEditor(typeof(AIController), true)]
+    public class AIControllerEditor : UEditor
     {
-        private AIController Controller => target as AIController;
+        private AIController Controller => (AIController)target;
+        
         public override void OnInspectorGUI()
         {
             EditorGUI.BeginChangeCheck();
@@ -28,7 +30,7 @@ namespace Chris.AI.Editor
                     GUILayout.Label($"{task.GetTaskID()}");
                     var rect = GUILayoutUtility.GetLastRect();
                     rect.x += 200;
-                    GUI.Label(rect, $"Status    {TaskEditorUtils.StatusToString(task.GetStatus())}", new GUIStyle(GUI.skin.label) { richText = true });
+                    GUI.Label(rect, $"Status    {task.GetStatus().ToString()}", new GUIStyle(GUI.skin.label) { richText = true });
                     GUILayout.EndHorizontal();
                 }
             }

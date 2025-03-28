@@ -114,6 +114,18 @@ namespace Chris.Gameplay.Flow.Utilities
         {
             LevelSystem.LoadAsync(levelName).Forget();
         }
+        
+        [ExecutableFunction, CeresLabel("Find Level from Name"), CeresGroup("Gameplay/Level")]
+        public static LevelReference Flow_FindLevel(string levelName)
+        {
+            return LevelSceneDataTableManager.Get().FindLevel(levelName);
+        }
+        
+        [ExecutableFunction, CeresLabel("Find Level from Tag"), CeresGroup("Gameplay/Level")]
+        public static LevelReference Flow_FindLevelFromTag(string tag)
+        {
+            return LevelSceneDataTableManager.Get().FindLevelFromTag(tag);
+        }
 
         #endregion
     }

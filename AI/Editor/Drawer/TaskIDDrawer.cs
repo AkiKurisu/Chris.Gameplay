@@ -9,7 +9,7 @@ namespace Chris.AI
     [CustomPropertyDrawer(typeof(TaskIDAttribute), true)]
     public class TaskIDDrawer : PropertyDrawer
     {
-        private class TaskIDRegistry
+        private static class TaskIDRegistry
         {
             public static readonly string[] Values;
             static TaskIDRegistry()
@@ -27,7 +27,9 @@ namespace Chris.AI
                 Values = list.ToArray();
             }
         }
-        private static readonly GUIContent k_IsNotStringLabel = new("The property type is not string.");
+        
+        private static readonly GUIContent IsNotStringLabel = new("The property type is not string.");
+        
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(position, label, property);
@@ -45,7 +47,7 @@ namespace Chris.AI
             }
             else
             {
-                EditorGUI.LabelField(position, label, k_IsNotStringLabel);
+                EditorGUI.LabelField(position, label, IsNotStringLabel);
             }
             EditorGUI.EndProperty();
         }

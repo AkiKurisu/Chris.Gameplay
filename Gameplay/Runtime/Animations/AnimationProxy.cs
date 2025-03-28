@@ -319,7 +319,7 @@ namespace Chris.Gameplay.Animations
         }
         
         /// <summary>
-        /// Call this function after animation proxy completly blend out
+        /// Call this function after animation proxy completely blend out
         /// </summary>
         protected virtual void SetOutGraph()
         {

@@ -67,7 +67,8 @@ namespace Chris.AI.EQS
                     return false;
                 }
             }
-        raycast:
+            
+            raycast:
             // Raycast detect, ignore height
             float normalDistance = Vector3.Distance(new Vector3(fromPosition.x, 0, fromPosition.z), new Vector3(target.x, 0, target.z));
             if (normalDistance > this.radius)
@@ -77,14 +78,10 @@ namespace Chris.AI.EQS
             Physics.Linecast(fromPosition, target, out RaycastHit hit, layerMask);
             if (hit.collider != null)
             {
-                if (FrameworkUtils.CompareTags(hit.collider, filterTags) == false)
+                if (hit.collider.CompareTags(filterTags) == false)
                 {
                     Debug.DrawLine(hit.point, fromPosition, Color.cyan);
                     isVisible = false;
-                }
-                else
-                {
-                    isVisible = true;
                 }
             }
             return isVisible;

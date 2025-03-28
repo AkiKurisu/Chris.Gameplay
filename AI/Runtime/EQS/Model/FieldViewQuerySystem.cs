@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Chris.Collections;
 using Chris.Gameplay;
 using Chris.Schedulers;
 using Unity.Burst;
@@ -8,6 +9,7 @@ using Unity.Mathematics;
 using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.Assertions;
+
 namespace Chris.AI.EQS
 {
     public struct FieldViewQueryCommand
@@ -85,9 +87,9 @@ namespace Chris.AI.EQS
         
         private JobHandle _jobHandle;
         
-        private static readonly ProfilerMarker ScheduleJobPM = new("FieldViewQuerySystem.ScheduleJob");
+        private static readonly ProfilerMarker ScheduleJobProfilerMarker = new("FieldViewQuerySystem.ScheduleJob");
         
-        private static readonly ProfilerMarker CompleteJobPM = new("FieldViewQuerySystem.CompleteJob");
+        private static readonly ProfilerMarker CompleteJobProfilerMarker = new("FieldViewQuerySystem.CompleteJob");
         
         protected override void Initialize()
         {
@@ -98,9 +100,10 @@ namespace Chris.AI.EQS
             Scheduler.WaitFrame(ref _lateUpdateTickHandle, 3, CompleteJob, TickFrame.FixedUpdate, isLooped: true);
             _lateUpdateTickHandle.Pause();
         }
+        
         private void ScheduleJob(int _)
         {
-            using (ScheduleJobPM.Auto())
+            using (ScheduleJobProfilerMarker.Auto())
             {
 
                 if (_commands.Length == 0) return;
@@ -117,9 +120,10 @@ namespace Chris.AI.EQS
                 _lateUpdateTickHandle.Resume();
             }
         }
+        
         private void CompleteJob(int _)
         {
-            using (CompleteJobPM.Auto())
+            using (CompleteJobProfilerMarker.Auto())
             {
                 _jobHandle.Complete();
                 _cache.DisposeSafe();
@@ -129,6 +133,7 @@ namespace Chris.AI.EQS
                 _lateUpdateTickHandle.Pause();
             }
         }
+        
         protected override void Release()
         {
             _jobHandle.Complete();
@@ -140,6 +145,7 @@ namespace Chris.AI.EQS
             _lateUpdateTickHandle.Dispose();
             _updateTickHandle.Dispose();
         }
+        
         public void EnqueueCommand(FieldViewQueryCommand command)
         {
             if (_handleIndices.TryGetValue(command.Self, out var index))
@@ -153,6 +159,7 @@ namespace Chris.AI.EQS
                 _commands.Add(command);
             }
         }
+        
         public void GetActorsInFieldView(ActorHandle handle, List<Actor> actors)
         {
             if (!_handleIndices.TryGetValue(handle, out var index))

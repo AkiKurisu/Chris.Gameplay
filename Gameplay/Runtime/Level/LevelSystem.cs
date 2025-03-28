@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Chris.DataDriven;
+using Chris.Pool;
 using Cysharp.Threading.Tasks;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.ResourceProviders;
@@ -16,6 +17,9 @@ namespace Chris.Gameplay.Level
         public LevelSceneRow[] Scenes;
         
         public static readonly LevelReference Empty = new() { Scenes = Array.Empty<LevelSceneRow>() };
+
+        private string[] _tags;
+        public string[] Tags => _tags ??= Scenes.SelectMany(x => x.tags).Distinct().ToArray();
     }
 
     public sealed class LevelSceneDataTableManager : DataTableManager<LevelSceneDataTableManager>
@@ -66,6 +70,18 @@ namespace Chris.Gameplay.Level
             }
             return LevelReference.Empty;
         }
+        
+        public LevelReference FindLevelFromTag(string tag)
+        {
+            foreach (var level in GetLevelReferences())
+            {
+                if (level.Tags.Contains(tag))
+                {
+                    return level;
+                }
+            }
+            return LevelReference.Empty;
+        }
     }
     
     public static class LevelSystem
@@ -79,7 +95,7 @@ namespace Chris.Gameplay.Level
 
         public static async UniTask LoadAsync(string levelName)
         {
-            var reference = FindLevel(levelName);
+            var reference = LevelSceneDataTableManager.Get().FindLevel(levelName);
             if (reference != null)
             {
                 await LoadAsync(reference);
@@ -118,11 +134,6 @@ namespace Chris.Gameplay.Level
                 }
             }
             await parallel;
-        }
-
-        public static LevelReference FindLevel(string levelName)
-        {
-            return LevelSceneDataTableManager.Get().FindLevel(levelName);
         }
     }
 }
