@@ -2,10 +2,9 @@ using System.Linq;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
-using UnityEngine;
+
 namespace Chris.Mod.Editor
 {
-    [CreateAssetMenu(fileName = "ExcludeDefaultBundleBuilder", menuName = "Mod/Builder/ExcludeDefaultBundleBuilder")]
     public class ExcludeDefaultBundleBuilder : CustomBuilder
     {
         public override string Description => "Exclude default group bundle from build.";

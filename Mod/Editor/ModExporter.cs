@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEditor;
 using UnityEngine;
 using System.IO;
+using System.Linq;
 using UnityEditor.AddressableAssets.Settings;
-using UnityEditor.AddressableAssets.Build;
 using Newtonsoft.Json;
+
 namespace Chris.Mod.Editor
 {
     public class ModExporter
@@ -21,7 +23,7 @@ namespace Chris.Mod.Editor
             {
                 new PathBuilder(),
             };
-            _builders.AddRange(exportConfig.customBuilders);
+            _builders.AddRange(exportConfig.customBuilders.Select(serializedType => serializedType.GetObject()));
         }
         
         private static string CreateBuildPath(string modName)
@@ -68,7 +70,7 @@ namespace Chris.Mod.Editor
         
         private static bool ZipTogether(string buildPath, string zipPath)
         {
-            return ZipWrapper.Zip(new string[1] { buildPath }, zipPath);
+            return ZipWrapper.Zip(new[] { buildPath }, zipPath);
         }
         
         private void WritePipeline(string buildPath)
@@ -80,7 +82,7 @@ namespace Chris.Mod.Editor
                 modName = _exportConfig.modName,
                 version = _exportConfig.version,
                 modIconBytes = _exportConfig.modIcon != null ? _exportConfig.modIcon.EncodeToPNG() : Array.Empty<byte>(),
-                apiVersion = ImportConstants.APIVersion.ToString()
+                apiVersion = ImportConstants.APIVersion.ToString(CultureInfo.InvariantCulture)
             };
             foreach (var builder in _builders)
             {
@@ -92,7 +94,7 @@ namespace Chris.Mod.Editor
         
         private bool BuildContent()
         {
-            AddressableAssetSettings.BuildPlayerContent(out AddressablesPlayerBuildResult result);
+            AddressableAssetSettings.BuildPlayerContent(out var result);
             CleanupPipeline();
             return string.IsNullOrEmpty(result.Error);
         }

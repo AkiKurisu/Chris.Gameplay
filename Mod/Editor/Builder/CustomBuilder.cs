@@ -1,9 +1,8 @@
-using UnityEngine;
 namespace Chris.Mod.Editor
 {
-    public abstract class CustomBuilder : ScriptableObject, IModBuilder
+    public abstract class CustomBuilder : IModBuilder
     {
-        public virtual string Description { get; }
+        public abstract string Description { get; }
         
         public virtual void Build(ModExportConfig exportConfig, string buildPath)
         {

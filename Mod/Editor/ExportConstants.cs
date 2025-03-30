@@ -4,7 +4,7 @@ namespace Chris.Mod.Editor
 {
     public class ExportConstants
     {
-        private static readonly LazyDirectory ExportDirectory = new(Path.Combine(Path.GetDirectoryName(Application.dataPath), "Export"));
+        private static readonly LazyDirectory ExportDirectory = new(Path.Combine(Path.GetDirectoryName(Application.dataPath)!, "Export"));
         
         public static string ExportPath => ExportDirectory.GetPath();
     }

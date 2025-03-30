@@ -1,9 +1,8 @@
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Build;
-using UnityEngine;
+
 namespace Chris.Mod.Editor
 {
-    [CreateAssetMenu(fileName = "DefaultBundleNamePatchBuilder", menuName = "Mod/Builder/DefaultBundleNamePatchBuilder")]
     public class DefaultBundleNamePatchBuilder : CustomBuilder
     {
         public override string Description => "Use mod name for naming shader bundle and monoScript bundle." +

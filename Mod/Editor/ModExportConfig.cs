@@ -1,3 +1,4 @@
+using Chris.Serialization;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 namespace Chris.Mod.Editor
@@ -17,7 +18,7 @@ namespace Chris.Mod.Editor
         [Tooltip("Texture need to be set as Readable and format is RGBA32Bit")]
         public Texture2D modIcon;
         
-        public CustomBuilder[] customBuilders;
+        public SerializedType<CustomBuilder>[] customBuilders;
         
         [HideInInspector]
         public string lastExportPath;
