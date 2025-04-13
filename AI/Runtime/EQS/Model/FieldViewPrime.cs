@@ -86,6 +86,7 @@ namespace Chris.AI.EQS
             }
             return isVisible;
         }
+        
         public readonly NativeArray<Vector3> AllocatePolygonCorners(Vector3 position, Quaternion rotation, Allocator allocator)
         {
             Vector3 forward = rotation * Vector3.forward;
@@ -103,6 +104,7 @@ namespace Chris.AI.EQS
             }
             return frustumCorners;
         }
+        
         public readonly bool IsPointInPolygon(Vector3 position, Quaternion rotation, Vector3 p)
         {
             var polygonCorners = AllocatePolygonCorners(position, rotation, Allocator.Temp);
@@ -119,6 +121,7 @@ namespace Chris.AI.EQS
             polygonCorners.Dispose();
             return inside;
         }
+        
         public readonly void DrawGizmos(Vector3 position, Quaternion rotation)
         {
 #if UNITY_EDITOR

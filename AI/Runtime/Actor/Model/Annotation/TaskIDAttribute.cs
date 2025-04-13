@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+
 namespace Chris.AI
 {
     public class TaskIDAttribute : PropertyAttribute { }
