@@ -10,7 +10,7 @@ namespace Chris.Gameplay.Resource
     /// </summary>
     /// <typeparam name="TCache"></typeparam>
     /// <typeparam name="TAsset"></typeparam>
-    public class SingletonCache<TCache, TAsset> : ResourceCache<TAsset> 
+    public abstract class SingletonCache<TCache, TAsset> : ResourceCache<TAsset> 
         where TAsset: UObject
         where TCache: SingletonCache<TCache, TAsset>, new()
     {

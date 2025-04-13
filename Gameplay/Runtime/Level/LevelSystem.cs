@@ -10,6 +10,9 @@ using UnityEngine.SceneManagement;
 
 namespace Chris.Gameplay.Level
 {
+    /// <summary>
+    /// Reference to gameplay level structure
+    /// </summary>
     public class LevelReference
     {
         public string Name => Scenes.Length > 0 ? Scenes[0].levelName : string.Empty;
@@ -19,7 +22,7 @@ namespace Chris.Gameplay.Level
         public static readonly LevelReference Empty = new() { Scenes = Array.Empty<LevelSceneRow>() };
 
         private string[] _tags;
-        public string[] Tags => _tags ??= Scenes.SelectMany(x => x.tags).Distinct().ToArray();
+        public string[] Tags => _tags ??= Scenes.SelectMany(row => row.tags).Distinct().ToArray();
     }
 
     public sealed class LevelSceneDataTableManager : DataTableManager<LevelSceneDataTableManager>
@@ -42,18 +45,18 @@ namespace Chris.Gameplay.Level
             if (_references != null) return _references;
             
             var dict = new Dictionary<string, List<LevelSceneRow>>();
-            foreach (var scene in DataTables.SelectMany(x=>x.Value.GetAllRows<LevelSceneRow>()))
+            foreach (var scene in DataTables.SelectMany(pair => pair.Value.GetAllRows<LevelSceneRow>()))
             {
                 // Whether it can load in current platform
                 if (!scene.ValidateLoadPolicy()) continue;
 
-                if (!dict.TryGetValue(scene.levelName, out var cache))
+                if (!dict.TryGetValue(scene.levelName, out var rows))
                 {
-                    cache = dict[scene.levelName] = new List<LevelSceneRow>();
+                    rows = dict[scene.levelName] = new List<LevelSceneRow>();
                 }
-                cache.Add(scene);
+                rows.Add(scene);
             }
-            return _references = dict.Select(x => new LevelReference()
+            return _references = dict.Select(x => new LevelReference
             {
                 Scenes = x.Value.ToArray()
             }).ToArray();
@@ -114,7 +117,7 @@ namespace Chris.Gameplay.Level
                 // Unload current main scene if there is no dynamic scene
                 if (!hasDynamicScene && _mainScene.Scene.IsValid())
                 {
-                    await Addressables.UnloadSceneAsync(_mainScene).Task;
+                    await Addressables.UnloadSceneAsync(_mainScene).ToUniTask();
                 }
             }
             else
@@ -130,7 +133,7 @@ namespace Chris.Gameplay.Level
             {
                 if (scene.loadMode >= LoadLevelMode.Additive)
                 {
-                    parallel.Add(Addressables.LoadSceneAsync(scene.reference.Address, LoadSceneMode.Additive).Task.AsUniTask());
+                    parallel.Add(Addressables.LoadSceneAsync(scene.reference.Address, LoadSceneMode.Additive).ToUniTask());
                 }
             }
             await parallel;
