@@ -24,8 +24,7 @@ namespace Chris.Mod
             Result result = new();
             using UnityWebRequest request = UnityWebRequest.Get(new Uri(url).AbsoluteUri);
             request.downloadHandler = new DownloadHandlerFile(downloadPath);
-            using UnityWebRequest www = UnityWebRequest.Get(new Uri(url).AbsoluteUri);
-            await www.SendWebRequest().ToUniTask(this, cancellationToken: _cancellationToken);
+            await request.SendWebRequest().ToUniTask(this, cancellationToken: _cancellationToken);
             string unzipFolder = Path.GetDirectoryName(downloadPath);
             if (!ZipWrapper.UnzipFile(downloadPath, unzipFolder))
             {
