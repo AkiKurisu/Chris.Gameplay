@@ -13,25 +13,25 @@ using UnityEngine.Assertions;
 
 namespace Chris.AI.EQS
 {
-    public struct FieldViewPrimeQueryCommand
+    public struct FieldViewQueryCommand
     {
         public ActorHandle Self;
         
-        public FieldViewPrime FieldView;
+        public FieldView FieldView;
         
         public LayerMask LayerMask;
     }
     
-    public class FieldViewPrimeQuerySystem : WorldSubsystem
+    public class FieldViewQuerySystem : WorldSubsystem
     {
         /// <summary>
-        /// Batch field view query, performe better than <see cref="EnvironmentQuery.OverlapFieldViewJob"/>
+        /// Batch field view query, perform better than <see cref="EnvironmentQuery.OverlapFieldViewJob"/>
         /// </summary>
         [BurstCompile]
         private struct OverlapFieldViewBatchJob : IJobParallelFor
         {
             [ReadOnly]
-            public NativeArray<FieldViewPrimeQueryCommand> Commands;
+            public NativeArray<FieldViewQueryCommand> Commands;
             
             [ReadOnly]
             public NativeArray<ActorData> Actors;
@@ -42,7 +42,7 @@ namespace Chris.AI.EQS
             [BurstCompile]
             public void Execute(int index)
             {
-                FieldViewPrimeQueryCommand source = Commands[index];
+                FieldViewQueryCommand source = Commands[index];
                 ActorData self = Actors[source.Self.GetIndex()];
                 float3 forward = math.mul(self.Rotation, new float3(0, 0, 1));
                 for (int i = 0; i < Actors.Length; i++)
@@ -77,13 +77,13 @@ namespace Chris.AI.EQS
             }
             
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static NativeArray<float3> AllocatePolygonCorners(FieldViewPrime fieldViewPrime, float3 position, quaternion rotation, float3 forward, Allocator allocator)
+            private static NativeArray<float3> AllocatePolygonCorners(FieldView fieldView, float3 position, quaternion rotation, float3 forward, Allocator allocator)
             {
-                float radius = fieldViewPrime.PolygonRadius;
-                var frustumCorners = new NativeArray<float3>(fieldViewPrime.sides, allocator);
-                float angleStep = 360f / fieldViewPrime.sides;
+                float radius = fieldView.PolygonRadius;
+                var frustumCorners = new NativeArray<float3>(fieldView.sides, allocator);
+                float angleStep = 360f / fieldView.sides;
 
-                for (int i = 0; i < fieldViewPrime.sides; i++)
+                for (int i = 0; i < fieldView.sides; i++)
                 {
                     float angle = math.degrees(i * angleStep);
                     frustumCorners[i] = new float3(math.cos(angle) * radius, 0, math.sin(angle) * radius);
@@ -96,7 +96,9 @@ namespace Chris.AI.EQS
             }
         }
         private SchedulerHandle _updateTickHandle;
+        
         private SchedulerHandle _lateUpdateTickHandle;
+        
         /// <summary>
         /// Set sysytem tick frame
         /// </summary>
@@ -111,9 +113,9 @@ namespace Chris.AI.EQS
         
         private NativeParallelMultiHashMap<int, ActorHandle> _results;
         
-        private NativeList<FieldViewPrimeQueryCommand> _commands;
+        private NativeList<FieldViewQueryCommand> _commands;
         
-        private NativeArray<FieldViewPrimeQueryCommand> _execution;
+        private NativeArray<FieldViewQueryCommand> _execution;
         
         private NativeParallelMultiHashMap<int, ActorHandle> _cache;
         
@@ -128,7 +130,7 @@ namespace Chris.AI.EQS
         protected override void Initialize()
         {
             Assert.IsFalse(FramePerTick <= 3);
-            _commands = new NativeList<FieldViewPrimeQueryCommand>(100, Allocator.Persistent);
+            _commands = new NativeList<FieldViewQueryCommand>(100, Allocator.Persistent);
             Scheduler.WaitFrame(ref _updateTickHandle, FramePerTick, ScheduleJob, TickFrame.FixedUpdate, isLooped: true);
             // Allow job scheduled in 3 frames
             Scheduler.WaitFrame(ref _lateUpdateTickHandle, 3, CompleteJob, TickFrame.FixedUpdate, isLooped: true);
@@ -180,7 +182,7 @@ namespace Chris.AI.EQS
             _updateTickHandle.Dispose();
         }
         
-        public void EnqueueCommand(FieldViewPrimeQueryCommand command)
+        public void EnqueueCommand(FieldViewQueryCommand command)
         {
             if (_handleIndices.TryGetValue(command.Self, out var index))
             {

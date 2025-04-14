@@ -1,13 +1,14 @@
 using System;
 using Unity.Collections;
 using UnityEngine;
+
 namespace Chris.AI.EQS
 {
     /// <summary>
     /// Represents an advanced field of view for AI mentioned in "Naughty Dog: Human Enemy AI In Last of The Us". 
     /// </summary>
     [Serializable]
-    public struct FieldViewPrime
+    public struct FieldView
     {
         [Range(0, 500), Tooltip("Field of view radius, ai can only sensor new target within this radius in far distance")]
         public float radius;
@@ -23,7 +24,7 @@ namespace Chris.AI.EQS
         
         public readonly float PolygonRadius => radius * blend * 0.5f;
         
-        public FieldViewPrime(float radius, float angle, int sides, float blend)
+        public FieldView(float radius, float angle, int sides, float blend)
         {
             this.radius = radius;
             this.angle = angle;

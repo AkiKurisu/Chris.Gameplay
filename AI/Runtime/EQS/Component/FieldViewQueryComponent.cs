@@ -38,10 +38,10 @@ namespace Chris.AI.EQS
     /// <summary>
     /// Field view prime query data provider associated with an Actor as component
     /// </summary>
-    public class FieldViewPrimeQueryComponent : ActorComponent, IFieldViewQueryComponent
+    public class FieldViewQueryComponent : ActorComponent, IFieldViewQueryComponent
     {
         [Header("Data")]
-        public FieldViewPrime fieldView = new()
+        public FieldView fieldView = new()
         {
             radius = 20,
             angle = 120,
@@ -51,14 +51,14 @@ namespace Chris.AI.EQS
         
         public LayerMask queryLayerMask;
         
-        private FieldViewPrimeQuerySystem _system;
+        private FieldViewQuerySystem _system;
         
         [Header("Gizmos")]
         public Vector3 offset;
         
         private void Start()
         {
-            _system = WorldSubsystem.GetOrCreate<FieldViewPrimeQuerySystem>();
+            _system = WorldSubsystem.GetOrCreate<FieldViewQuerySystem>();
             if (_system == null)
             {
                 Debug.LogError($"[FieldViewPrimeQueryComponent] Can not get FieldViewPrimeQuerySystem dynamically.");
@@ -71,7 +71,7 @@ namespace Chris.AI.EQS
             {
                 return false;
             }
-            _system.EnqueueCommand(new FieldViewPrimeQueryCommand()
+            _system.EnqueueCommand(new FieldViewQueryCommand()
             {
                 Self = GetActor().GetActorHandle(),
                 FieldView = fieldView,
