@@ -12,7 +12,6 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "ICSharpCode.SharpZipLib.dll",
         "R3.dll",
         "Newtonsoft.Json.dll"
     ],
