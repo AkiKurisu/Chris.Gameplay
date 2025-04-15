@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
+using Chris.Configs;
+
 namespace Chris.Mod
 {
     /// <summary>
     /// Configuration of mod importer
     /// </summary>
     [Serializable]
-    public class ModSettings
+    public class ModSettings: Config<ModSettings>
     {
         public string LoadingPath { get; set; } = ImportConstants.LoadingPath;
         
@@ -22,7 +24,7 @@ namespace Chris.Mod
                 }
                 return modStateInfo.modState;
             }
-            stateInfos.Add(new ModStateInfo()
+            stateInfos.Add(new ModStateInfo
             {
                 modFullName = modInfo.FullName,
                 modState = ModState.Enabled
