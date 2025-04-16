@@ -3,6 +3,7 @@ using Chris.Events;
 using Chris.Schedulers;
 using UnityEngine;
 using UnityEngine.Animations;
+
 namespace Chris.Gameplay.Animations
 {
     /// <summary>
@@ -26,7 +27,7 @@ namespace Chris.Gameplay.Animations
     }
     
     /// <summary>
-    /// Class for define an notifier for animation proxy montage
+    /// Class for define a notifier for animation proxy montage
     /// </summary>
     public class AnimationNotifier
     {
@@ -72,20 +73,21 @@ namespace Chris.Gameplay.Animations
             return false;
         }
     }
+    
     /// <summary>
     /// Notifier with specific animation state hash
     /// </summary>
-    public class AnimationNotifier_AnimationState : AnimationNotifier
+    public class AnimationStateNotifier : AnimationNotifier
     {
         public readonly int StateHash;
 
-        public AnimationNotifier_AnimationState(string stateName, int layer = 0, float normalizedTime = -1)
+        public AnimationStateNotifier(string stateName, int layer = 0, float normalizedTime = -1)
         : base(layer, normalizedTime)
         {
             StateHash = Animator.StringToHash(stateName);
         }
         
-        public AnimationNotifier_AnimationState(int stateHash, int layer = 0, float normalizedTime = -1)
+        public AnimationStateNotifier(int stateHash, int layer = 0, float normalizedTime = -1)
         : base(layer, normalizedTime)
         {
             StateHash = stateHash;
@@ -188,6 +190,7 @@ namespace Chris.Gameplay.Animations
             if (_notifierContexts.Count == 0)
             {
                 _eventTickHandle.Cancel();
+                _eventTickHandle = default;
             }
         }
         
@@ -211,12 +214,12 @@ namespace Chris.Gameplay.Animations
         
         public void RegisterNotifyCallback(EventCallback<AnimationNotifyEvent> callback)
         {
-            GetEventHandler().RegisterCallback(callback, default);
+            GetEventHandler().RegisterCallback(callback);
         }
         
         public void UnregisterNotifyCallback(EventCallback<AnimationNotifyEvent> callback)
         {
-            GetEventHandler().UnregisterCallback(callback, default);
+            GetEventHandler().UnregisterCallback(callback);
         }
         
         private void DispatchStopEvent(float blendOutDuration)
