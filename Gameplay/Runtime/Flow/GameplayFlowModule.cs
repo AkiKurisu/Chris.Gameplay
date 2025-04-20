@@ -1,15 +1,14 @@
 using Ceres.Graph;
 using Chris.Gameplay.Animations;
-using UnityEngine;
-namespace Chris.Gameplay.Flow.Utilities
+using Chris.Modules;
+using UnityEngine.Scripting;
+
+namespace Chris.Gameplay.Flow
 {
-    internal static class GameplaySetup
+    [Preserve]
+    internal class GameplayFlowModule: RuntimeModule
     {
-        [RuntimeInitializeOnLoadMethod]
-#if UNITY_EDITOR
-        [UnityEditor.InitializeOnLoadMethod]
-#endif
-        private static void InitializeOnLoad()
+        public override void Initialize(ModuleConfig config)
         {
             /* Register port implicit conversation */
             // ========================= Animation =========================== //

@@ -72,11 +72,10 @@ namespace Chris.Gameplay
             _actorData.Resize(_actors.Count);
             for (int i = 0; i < _actorData.Length; ++i)
             {
-                _actorData[i] = new ActorData()
+                _actorData[i] = new ActorData
                 {
                     Handle = _actors[i].GetActorHandle(),
                     // not update layer in tick to prevent allocation
-                    // TODO: Move out of actor data, or use custom layer mask
                     Layer = _actors[i].gameObject.layer
                 };
             }

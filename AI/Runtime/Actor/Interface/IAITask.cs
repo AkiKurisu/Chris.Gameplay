@@ -7,6 +7,7 @@ namespace Chris.AI
         /// </summary>
         /// <param name="hostController"></param>
         void SetController(AIController hostController);
+        
         /// <summary>
         /// Whether this task should automatically start when controller is enabled
         /// </summary>

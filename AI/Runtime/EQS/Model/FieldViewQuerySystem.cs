@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Chris.Collections;
 using Chris.Gameplay;
 using Chris.Schedulers;
@@ -30,7 +31,7 @@ namespace Chris.AI.EQS
         private struct OverlapFieldViewBatchJob : IJobParallelFor
         {
             [ReadOnly]
-            public NativeArray<FieldViewQueryCommand> Data;
+            public NativeArray<FieldViewQueryCommand> Commands;
             
             [ReadOnly]
             public NativeArray<ActorData> Actors;
@@ -41,33 +42,68 @@ namespace Chris.AI.EQS
             [BurstCompile]
             public void Execute(int index)
             {
-                var source = Data[index];
-                var self = Actors[source.Self.GetIndex()];
-                var forward = math.mul(self.Rotation, new float3(0, 0, 1));
+                FieldViewQueryCommand source = Commands[index];
+                ActorData self = Actors[source.Self.GetIndex()];
+                float3 forward = math.mul(self.Rotation, new float3(0, 0, 1));
                 for (int i = 0; i < Actors.Length; i++)
                 {
                     if (i == index) continue;
                     ActorData actor = Actors[i];
-                    if (MathUtils.IsInLayerMask(actor.Layer, source.LayerMask)
-                    && math.distance(self.Position, actor.Position) <= source.FieldView.radius
+                    if (!MathUtils.IsInLayerMask(actor.Layer, source.LayerMask)) continue;
+                    float radius = source.FieldView.PolygonRadius;
+                    float centerDistance = math.distance(self.Position + forward * radius, actor.Position);
+                    // Inside
+                    if (centerDistance >= radius)
+                    {
+                        using var polygons = AllocatePolygonCorners(source.FieldView, self.Position, self.Rotation, forward, Allocator.Temp);
+                        if (!MathUtils.IsPointInPolygon(polygons, actor.Position))
+                        {
+                            // When target is nearly on edge, detect whether target is in fov now
+                            const float threshold = 0.9f;
+                            if (centerDistance >= threshold * radius && MathUtils.InViewAngle(self.Position, actor.Position, forward, source.FieldView.angle))
+                            {
+                                ResultActors.Add(index, actor.Handle);
+                            }
+                            continue;
+                        }
+                    }
+                    // Outside
+                    if (math.distance(self.Position, actor.Position) <= source.FieldView.radius
                     && MathUtils.InViewAngle(self.Position, actor.Position, forward, source.FieldView.angle))
                     {
                         ResultActors.Add(index, actor.Handle);
                     }
                 }
             }
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static NativeArray<float3> AllocatePolygonCorners(FieldView fieldView, float3 position, quaternion rotation, float3 forward, Allocator allocator)
+            {
+                float radius = fieldView.PolygonRadius;
+                var frustumCorners = new NativeArray<float3>(fieldView.sides, allocator);
+                float angleStep = 360f / fieldView.sides;
+
+                for (int i = 0; i < fieldView.sides; i++)
+                {
+                    float angle = math.degrees(i * angleStep);
+                    frustumCorners[i] = new float3(math.cos(angle) * radius, 0, math.sin(angle) * radius);
+                }
+                for (int i = 0; i < frustumCorners.Length; i++)
+                {
+                    frustumCorners[i] = position + forward * radius + math.mul(rotation, frustumCorners[i]);
+                }
+                return frustumCorners;
+            }
         }
-        
         private SchedulerHandle _updateTickHandle;
         
         private SchedulerHandle _lateUpdateTickHandle;
         
         /// <summary>
-        /// Set system tick frame
+        /// Set sysytem tick frame
         /// </summary>
         /// <value></value>
         public static int FramePerTick { get; set; } = DefaultFramePerTick;
-        
         /// <summary>
         /// Default tick frame: 2 fps
         /// </summary>
@@ -87,9 +123,9 @@ namespace Chris.AI.EQS
         
         private JobHandle _jobHandle;
         
-        private static readonly ProfilerMarker ScheduleJobProfilerMarker = new("FieldViewQuerySystem.ScheduleJob");
+        private static readonly ProfilerMarker ScheduleJobProfilerMarker = new("FieldViewPrimeQuerySystem.ScheduleJob");
         
-        private static readonly ProfilerMarker CompleteJobProfilerMarker = new("FieldViewQuerySystem.CompleteJob");
+        private static readonly ProfilerMarker CompleteJobProfilerMarker = new("FieldViewPrimeQuerySystem.CompleteJob");
         
         protected override void Initialize()
         {
@@ -114,7 +150,7 @@ namespace Chris.AI.EQS
                 _jobHandle = new OverlapFieldViewBatchJob()
                 {
                     Actors = _actorData,
-                    Data = _execution,
+                    Commands = _execution,
                     ResultActors = _results
                 }.Schedule(_execution.Length, 32);
                 _lateUpdateTickHandle.Resume();
@@ -164,7 +200,7 @@ namespace Chris.AI.EQS
         {
             if (!_handleIndices.TryGetValue(handle, out var index))
             {
-                Debug.LogWarning($"[FieldViewQuerySystem] Actor {handle.Handle}'s field view has not been initialized");
+                Debug.LogWarning($"[FieldViewPrimeQuerySystem] Actor {handle.Handle}'s field view has not been initialized");
                 return;
             }
             if (!_cache.IsCreated) return;

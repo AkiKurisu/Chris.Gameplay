@@ -2,7 +2,8 @@ using System;
 using Chris.Tasks;
 using Kurisu.AkiBT;
 using UnityEngine;
-using Object = UnityEngine.Object;
+using UObject = UnityEngine.Object;
+
 namespace Chris.AI
 {
     /// <summary>
@@ -23,9 +24,9 @@ namespace Chris.AI
         
         public BehaviorTree InstanceTree { get; private set; }
         
-        Object IBehaviorTreeContainer.Object => host;
+        UObject IBehaviorTreeContainer.Object => _controller;
         
-        private AIController host;
+        private AIController _controller;
         
         public BehaviorTask()
         {
@@ -35,7 +36,7 @@ namespace Chris.AI
         
         public void SetController(AIController hostController)
         {
-            host = hostController;
+            _controller = hostController;
             InstanceTree = behaviorTreeAsset.GetBehaviorTree();
             InstanceTree.InitVariables();
             InstanceTree.BlackBoard.MapTo(hostController.BlackBoard);
@@ -90,7 +91,7 @@ namespace Chris.AI
         
         protected override string GetTaskName()
         {
-            return $"BehaviorTask [{host.gameObject.name}>>{behaviorTreeAsset.name}]";
+            return $"BehaviorTask [{_controller.gameObject.name}>>{behaviorTreeAsset.name}]";
         }
     }
 }

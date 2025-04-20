@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using Ceres.Graph.Flow;
 using Ceres.Graph.Flow.Annotations;
 using Chris.Serialization;
 using UnityEngine;
 using UnityEngine.Assertions;
+
 namespace Chris.Gameplay
 {
     /// <summary>
@@ -11,6 +13,19 @@ namespace Chris.Gameplay
     /// </summary>
     public class Actor : FlowGraphObject
     {
+        /// <summary>
+        /// Settings contains multi-types of flow graph dependencies for <see cref="Actor"/>
+        /// </summary>
+        [Serializable]
+        public class FlowGraphSettings
+        {
+            [Tooltip("Set to let actor create flow graph instance from asset")]
+            public FlowGraphAsset graphAsset;
+        
+            [Tooltip("Address for sharing flow graph dependencies from DataTable")]
+            public string actorAddress;
+        }
+        
         private GameWorld _world;
         
         private PlayerController _controller;
@@ -18,7 +33,10 @@ namespace Chris.Gameplay
         private ActorHandle _handle;
         
         private readonly HashSet<ActorComponent> _actorComponents = new();
-        
+
+        [Tooltip("Advanced settings for loading and updating flow graph")]
+        public FlowGraphSettings advancedSettings = new();
+
         [ImplementableEvent]
         protected virtual void Awake()
         {
@@ -69,6 +87,24 @@ namespace Chris.Gameplay
             UnregisterActor(this);
             ReleaseGraph();
             _actorComponents.Clear();
+        }
+        
+        public override FlowGraph GetFlowGraph()
+        {
+            if (Application.isPlaying)
+            {
+                if (!string.IsNullOrEmpty(advancedSettings.actorAddress))
+                {
+                    var asset = ActorFlowGraphSubsystem.Get().GetFlowGraphAsset(advancedSettings.actorAddress);
+                    if (asset)
+                    {
+                        return asset.GetFlowGraph();
+                    }
+                }
+                if (advancedSettings.graphAsset) return advancedSettings.graphAsset.GetFlowGraph();
+            }
+
+            return base.GetFlowGraph();
         }
         
         /// <summary>

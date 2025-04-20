@@ -13,7 +13,7 @@ namespace Chris.AI.EQS
         bool RequestFieldViewQuery();
 
         /// <summary>
-        /// Detect whether can see the target
+        /// Detect whether it can see the target
         /// </summary>
         /// <param name="target"></param>
         /// <param name="fromPosition"></param>
@@ -35,27 +35,18 @@ namespace Chris.AI.EQS
         void CollectViewActors<T>(List<T> actors) where T : Actor;
     }
     
-    public abstract class FieldViewQueryComponentBase : ActorComponent, IFieldViewQueryComponent
-    {
-        public abstract void CollectViewActors(List<Actor> actors);
-        
-        public abstract void CollectViewActors<T>(List<T> actors) where T : Actor;
-        
-        public abstract bool Detect(Vector3 target, Vector3 fromPosition, Quaternion fromRotation, string[] filterTags = null);
-        
-        public abstract bool RequestFieldViewQuery();
-    }
-    
     /// <summary>
-    /// Field view query data provider associated with an Actor as component
+    /// Field view prime query data provider associated with an Actor as component
     /// </summary>
-    public class FieldViewQueryComponent : FieldViewQueryComponentBase
+    public class FieldViewQueryComponent : ActorComponent, IFieldViewQueryComponent
     {
         [Header("Data")]
         public FieldView fieldView = new()
         {
             radius = 20,
-            angle = 120
+            angle = 120,
+            sides = 8,
+            blend = 0.5f
         };
         
         public LayerMask queryLayerMask;
@@ -70,10 +61,11 @@ namespace Chris.AI.EQS
             _system = WorldSubsystem.GetOrCreate<FieldViewQuerySystem>();
             if (_system == null)
             {
-                Debug.LogError($"[FieldViewQueryComponent] Can not get FieldViewQuerySystem dynamically.");
+                Debug.LogError($"[FieldViewPrimeQueryComponent] Can not get FieldViewPrimeQuerySystem dynamically.");
             }
         }
-        public override bool RequestFieldViewQuery()
+        
+        public bool RequestFieldViewQuery()
         {
             if (_system == null)
             {
@@ -88,12 +80,12 @@ namespace Chris.AI.EQS
             return true;
         }
         
-        public override void CollectViewActors(List<Actor> actors)
+        public void CollectViewActors(List<Actor> actors)
         {
             _system.GetActorsInFieldView(GetActor().GetActorHandle(), actors);
         }
         
-        public override void CollectViewActors<T>(List<T> actors)
+        public void CollectViewActors<T>(List<T> actors) where T : Actor
         {
             var list = ListPool<Actor>.Get();
             CollectViewActors(list);
@@ -104,14 +96,14 @@ namespace Chris.AI.EQS
             ListPool<Actor>.Release(list);
         }
         
-        public override bool Detect(Vector3 target, Vector3 fromPosition, Quaternion fromRotation, string[] filterTags = null)
+        public bool Detect(Vector3 target, Vector3 fromPosition, Quaternion fromRotation, string[] filterTags = null)
         {
             return fieldView.Detect(target, fromPosition, fromRotation, queryLayerMask, filterTags);
         }
         
         private void OnDrawGizmos()
         {
-            fieldView.DrawGizmos(transform.position + offset, transform.forward);
+            fieldView.DrawGizmos(transform.position + offset, transform.rotation);
         }
     }
 }
