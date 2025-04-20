@@ -3,7 +3,8 @@
     "rootNamespace": "Chris.Gameplay.Editor",
     "references": [
         "GUID:a1522487bb381474896580435573c012",
-        "GUID:e61a2a07ba2680848ad23eef5b7c024b"
+        "GUID:e61a2a07ba2680848ad23eef5b7c024b",
+        "GUID:7dddf801c0fab33408b06985cd6a607e"
     ],
     "includePlatforms": [
         "Editor"
