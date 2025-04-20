@@ -1,39 +1,44 @@
 <div align="center">
 
-# Chris Modules
+# Chris Gameplay
 
 Gameplay modules for [Chris](https://github.com/AkiKurisu/Chris) framework.
 
 </div>
 
 ## Install
-To install modules, use git URL to download package by Unity Package Manager ```https://github.com/AkiKurisu/Chris-Modules.git```
+To install `Chris.Gameplay`, use git URL to download package by Unity Package Manager ```https://github.com/AkiKurisu/Chris.Gameplay.git```
 
-## Features
+## Gameplay
 
-[Gameplay](./Documentation~/Gameplay.md)
->Based on Ceres to integrate visual scripting and C#.
+### [Document](./Documentation~/Gameplay.md)
+
+Actor based gameplay architecture like Unreal, integrate Ceres to support visual scripting.
 
 ![Visual Scripting](./Documentation~/Images/visual_scripting.png)
 
-[AI](./Documentation~/AI.md)
+## Experimental
 
->Personal AI tools from AAA games research. 
+Experimental modules need additional dependencies and are not stable.
+
+### [AI](./Documentation~/AI.md)
+
+Personal AI tools from AAA games research. 
 
 ![FieldViewPrime](./Documentation~/Images/fov-prime.gif)
 
-[Mod](./Documentation~/Mod.md) 
-> Mod workflow based on Addressables. 
+> Field View from "Naughty Dog: Human Enemy AI In Last of The Us"
 
-![Mod Exporter](./Documentation~/Images/mod_exporter.png)
+### [Mod](./Documentation~/Mod.md) 
+Mod workflow based on Addressables. 
 
 ## Reference
 
-[Chris](https://github.com/AkiKurisu/Chris)
+[Chris](https://github.com/AkiKurisu/Chris) - Game framework designed for efficient development.
 
-[Ceres](https://github.com/AkiKurisu/Ceres)
+[Ceres](https://github.com/AkiKurisu/Ceres) - Powerful visual scripting toolkit.
 
-[AkiBT](https://github.com/AkiKurisu/AkiBT)
+[AkiBT](https://github.com/AkiKurisu/AkiBT) - Powerful node based behavior tree editor.
 
 ## License
 
