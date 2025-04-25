@@ -2,11 +2,16 @@
 
 Based on Ceres to integrate visual scripting and C#. Also contains some tools that may be useful.
 
-## Animations
+## Animation Proxy
+
+`AnimationProxy` is a wrapper of `Animator` to play montage and sequence by script directly.
 
 - Use `AnimationProxy` to play montage by `RuntimeAnimatorController` and `AnimationClip`.
-- Support multi layers and events.
-- Use `AnimationPreviewer` to preview `AnimationClip` in Editor Mode and Play Mode.
+- Support multi layers.
+- Support subscribe events.
+- Support visual scripting.
+
+![AnimationProxy](./Images/animation_proxy.png)
 
 ### AnimationProxy Example
 
@@ -51,14 +56,16 @@ public class SequenceExample : MonoBehaviour
 }
 ```
 
-### Debugger
+### Debugging
 
-Recommend to use [Unity PlayableGraph Monitor](`https://github.com/SolarianZ/UnityPlayableGraphMonitorTool`)
+Recommend to use [Unity PlayableGraph Monitor](`https://github.com/SolarianZ/UnityPlayableGraphMonitorTool`).
 
-## Audios
+## Audios and FX
 
-- `AudioSystem` Use poolable audio source.
+`AudioSystem` and `FXSystem` are designed to manage audio and fx within a scene using a general pooling method based on `Chris.Pool`.
 
-## FX
+- Support load from Addressables.
+- Support visual scripting.
+- Allocation optimization.
 
-- `FXSystem` Use poolable particle system.
+![FX Audios](./Images/fx_audio.png)
