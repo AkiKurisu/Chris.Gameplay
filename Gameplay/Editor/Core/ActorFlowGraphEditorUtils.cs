@@ -28,37 +28,42 @@ namespace Chris.Gameplay.Editor
                 .Select(AssetDatabase.GetAssetPath)
                 .Where(assetPath => !string.IsNullOrEmpty(assetPath))
                 .ToList();
-            if (assetPaths.Any())
+            bool canSerializeAsText = ChrisGameplaySettings.instance.remoteUpdateSerializeMode == RemoteUpdateSerializeMode.ForceText 
+                || !assetPaths.Any() && ChrisGameplaySettings.instance.remoteUpdateSerializeMode == RemoteUpdateSerializeMode.PreferText;
+            if (canSerializeAsText)
             {
-                BuildRemoteAssetBundle(container, path, data, assetPaths, flowPath);
+                BuildRemoteAssetText(container, flowPath, path, data);
             }
             else
             {
-                BuildRemoteAssetBinary(container, flowPath, path, data);
+                BuildRemoteAssetBundle(container, path, data, assetPaths, flowPath);
             }
             Process.Start(flowPath);
         }
 
-        private static void BuildRemoteAssetBinary(IFlowGraphContainer container, string flowPath, string path,
+        private static void BuildRemoteAssetText(IFlowGraphContainer container, string flowPath, string path,
             FlowGraphData data)
         {
-            var serializer = new SaveLoadSerializer(flowPath, "bin");
+            var serializer = new SaveLoadSerializer(flowPath, "json", TextSerializeFormatter.Instance);
             serializer.Save(path, data);
-            UDebug.Log($"Export {container.GetIdentifier()} remote asset to {Path.Combine(flowPath, $"{path}.bin")}");
+            UDebug.Log($"Export {container.GetIdentifier()} remote asset to {Path.Combine(flowPath, $"{path}.json")}");
         }
 
         private static void BuildRemoteAssetBundle(IFlowGraphContainer container, string path, FlowGraphData data,
             List<string> assetPaths, string flowPath)
         {
+            // Create temporary container asset
             var tempPath = $"Assets/{path}.asset";
-            var asset = ScriptableObject.CreateInstance<FlowGraphAsset>();
-            AssetDatabase.CreateAsset(asset, tempPath);
+            var temporaryAsset = ScriptableObject.CreateInstance<FlowGraphAsset>();
+            AssetDatabase.CreateAsset(temporaryAsset, tempPath);
             AssetDatabase.Refresh();
-            asset.SetGraphData(data.CloneT<FlowGraphData>());
-            EditorUtility.SetDirty(asset);
-            AssetDatabase.SaveAssetIfDirty(asset);
-            assetPaths.Insert(0, AssetDatabase.GetAssetPath(asset));
+            temporaryAsset.SetGraphData(data.CloneT<FlowGraphData>());
+            EditorUtility.SetDirty(temporaryAsset);
+            AssetDatabase.SaveAssetIfDirty(temporaryAsset);
+            
+            assetPaths.Insert(0, AssetDatabase.GetAssetPath(temporaryAsset));
             var addressableNames = assetPaths.ToArray();
+            /* Use path as main asset's address */
             addressableNames[0] = path;
             var buildMap = new AssetBundleBuild
             {
@@ -77,6 +82,8 @@ namespace Chris.Gameplay.Editor
             File.Delete(abName + ".manifest");
             File.Delete(Path.Combine(flowPath, "Flow"));
             File.Delete(Path.Combine(flowPath, "Flow.manifest"));
+            AssetDatabase.DeleteAsset(tempPath);
+            AssetDatabase.Refresh();
             UDebug.Log($"Export {container.GetIdentifier()} remote asset to {destName}");
         }
     }

@@ -9,12 +9,18 @@ namespace Chris.Gameplay
     [InitializeOnWorldCreate]
     public class ActorFlowGraphSubsystem: WorldSubsystem
     {
-        private readonly SaveLoadSerializer _serializer = new (Path.Combine(SaveUtility.SavePath, "Flow"), "bin");
+        private SaveLoadSerializer _serializer;
 
         private readonly Dictionary<string, FlowGraphAsset> _remoteFlowGraph = new();
 
         private readonly List<AssetBundle> _assetBundles = new();
-        
+
+        protected override void Initialize()
+        {
+            base.Initialize();
+            _serializer = new SaveLoadSerializer(Path.Combine(SaveUtility.SavePath, "Flow"), "json", TextSerializeFormatter.Instance);
+        }
+
         public static ActorFlowGraphSubsystem Get()
         {
             return GameWorld.Get()?.GetSubsystem<ActorFlowGraphSubsystem>();
