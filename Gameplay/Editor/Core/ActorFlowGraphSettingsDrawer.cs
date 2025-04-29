@@ -1,12 +1,7 @@
 using System;
-using System.Diagnostics;
-using System.IO;
-using Ceres.Graph;
 using Ceres.Graph.Flow;
-using Chris.Serialization;
 using UnityEditor;
 using UnityEngine;
-using UDebug = UnityEngine.Debug;
 
 namespace Chris.Gameplay.Editor
 {
@@ -50,25 +45,11 @@ namespace Chris.Gameplay.Editor
                     if (GUI.Button(position, Styles.ExportRemoteAssetLabel))
                     {
                         var actor = (IFlowGraphContainer)property.serializedObject.targetObject;
-                        ExportRemoteAsset(actor, addressProp.stringValue);
+                        EditorApplication.delayCall += () => ActorFlowGraphEditorUtils.ExportRemoteAsset(actor, addressProp.stringValue);
                     }
                 }
             }, !Application.isPlaying);
             EditorGUI.EndProperty();
-        }
-
-        private static void ExportRemoteAsset(IFlowGraphContainer container, string address)
-        {
-            var data = container.GetFlowGraphData();
-            var flowPath = Path.Combine(SaveUtility.SavePath, "Flow");
-            var serializer = new SaveLoadSerializer(flowPath, "bin");
-            if (!ActorFlowGraphDataTableManager.Get().TryGetRemoteUpdatePath(address, out var path))
-            {
-                path = address;
-            }
-            serializer.Save(path, data);
-            UDebug.Log($"Export {container.GetIdentifier()} remote asset to {Path.Combine(flowPath, $"{address}.bin")}");
-            Process.Start(flowPath);
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
