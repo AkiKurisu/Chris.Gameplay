@@ -21,7 +21,7 @@ namespace Chris.Gameplay.Audios
         
         public string Name;
         
-        public SoftAssetReference<AudioClip> Reference = SoftAssetReference<AudioClip>.Empty;
+        public SoftAssetReference<AudioClip> Reference;
         
         public AudioClip AudioClip;
         
@@ -39,7 +39,7 @@ namespace Chris.Gameplay.Audios
         {
             Name = string.Empty;
             AudioClip = null;
-            Reference = SoftAssetReference<AudioClip>.Empty;
+            Reference = new SoftAssetReference<AudioClip>();
             IsLoading = false;
         }
         
