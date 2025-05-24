@@ -49,13 +49,27 @@ namespace Chris.Gameplay
         public T GetSubsystem<T>() where T : SubsystemBase
         {
             if (_systems.TryGetValue(typeof(T), out var subsystem))
+            {
+                if (WorldSubsystemSettings.Get().subsystemForceInitializeBeforeGet)
+                {
+                    subsystem.InternalInit();
+                }
                 return (T)subsystem;
+            }
             return null;
         }
         
         public SubsystemBase GetSubsystem(Type type)
         {
-            return _systems.GetValueOrDefault(type);
+            if (_systems.TryGetValue(type, out var subsystem))
+            {
+                if (WorldSubsystemSettings.Get().subsystemForceInitializeBeforeGet)
+                {
+                    subsystem.InternalInit();
+                }
+                return subsystem;
+            }
+            return null;
         }
         
         public void Init()
