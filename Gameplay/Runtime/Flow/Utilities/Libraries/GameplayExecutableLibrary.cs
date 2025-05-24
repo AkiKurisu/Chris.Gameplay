@@ -2,11 +2,13 @@ using Ceres.Annotations;
 using Ceres.Graph.Flow.Annotations;
 using Ceres.Graph.Flow.Utilities;
 using Chris.Gameplay.Audios;
+using Chris.Gameplay.Capture;
 using Chris.Gameplay.FX;
 using Chris.Gameplay.Level;
 using Chris.Serialization;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+
 namespace Chris.Gameplay.Flow.Utilities
 {
     /// <summary>
@@ -128,5 +130,25 @@ namespace Chris.Gameplay.Flow.Utilities
         }
 
         #endregion
+        
+        #region Capture
+        
+        [ExecutableFunction, CeresLabel("Capture Screen Shot to Texture2D"), CeresGroup("Gameplay/Capture")]
+        public static Texture2D CaptureScreenShotToTexture2D(Camera camera, Vector2 size)
+        {
+            var screenTexture = RenderTexture.GetTemporary((int)size.x, (int)size.y, 
+                0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default, 1);
+            ScreenShotUtils.CaptureScreenShot(new ScreenShotRequest
+            {
+                Camera = camera,
+                Destination = screenTexture,
+                FromRenderer = true
+            }); 
+            var captureTex = screenTexture.ToTexture2D();
+            RenderTexture.ReleaseTemporary(screenTexture);
+            return captureTex;
+        }
+        
+        #endregion Capture
     }
 }

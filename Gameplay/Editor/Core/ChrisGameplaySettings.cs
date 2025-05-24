@@ -2,7 +2,6 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Chris.Configs.Editor;
 using Chris.Serialization;
 
 namespace Chris.Gameplay.Editor
@@ -15,7 +14,7 @@ namespace Chris.Gameplay.Editor
     }
     
     [FilePath("ProjectSettings/ChrisGameplaySettings.asset", FilePathAttribute.Location.ProjectFolder)]
-    public class ChrisGameplaySettings : ScriptableSingleton<ChrisGameplaySettings>, IConfigBuilder
+    public class ChrisGameplaySettings : ScriptableSingleton<ChrisGameplaySettings>
     {
         public RemoteUpdateSerializeMode remoteUpdateSerializeMode = RemoteUpdateSerializeMode.AssetBundle;
 
@@ -24,11 +23,11 @@ namespace Chris.Gameplay.Editor
         internal static void SaveSettings()
         {
             instance.Save(true);
-            var serializer = new SaveLoadSerializer(ConfigsModule.ConfigStreamingDirectory, ConfigsModule.ConfigExtension);
-            instance.BuildConfig(serializer);
+            var serializer = new SaveLoadSerializer(ConfigsModule.ConfigPersistentDirectory, ConfigsModule.ConfigExtension);
+            instance.ExportConfig(serializer);
         }
 
-        public void BuildConfig(SaveLoadSerializer serializer)
+        private void ExportConfig(SaveLoadSerializer serializer)
         {
             var settings = WorldSubsystemSettings.Get();
             settings.subsystemForceInitializeBeforeGet = subsystemForceInitializeBeforeGet;
