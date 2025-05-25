@@ -133,11 +133,21 @@ namespace Chris.Gameplay.Flow.Utilities
         
         #region Capture
         
+        /// <summary>
+        /// Screenshot and save it to a new <see cref="Texture2D"/>
+        /// </summary>
+        /// <param name="camera"></param>
+        /// <param name="size"></param>
+        /// <param name="depthBuffer"></param>
+        /// <param name="renderTextureFormat"></param>
+        /// <returns></returns>
         [ExecutableFunction, CeresLabel("Capture Screen Shot to Texture2D"), CeresGroup("Gameplay/Capture")]
-        public static Texture2D CaptureScreenShotToTexture2D(Camera camera, Vector2 size)
+        public static Texture2D Flow_CaptureScreenShotToTexture2D(Camera camera, Vector2 size, 
+            int depthBuffer = 24, RenderTextureFormat renderTextureFormat = RenderTextureFormat.ARGB32)
         {
+            int antiAliasing = Mathf.Max(1, QualitySettings.antiAliasing);
             var screenTexture = RenderTexture.GetTemporary((int)size.x, (int)size.y, 
-                0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default, 1);
+                depthBuffer, renderTextureFormat, RenderTextureReadWrite.Default, antiAliasing);
             ScreenShotUtils.CaptureScreenShot(new ScreenShotRequest
             {
                 Camera = camera,
