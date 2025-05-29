@@ -134,15 +134,15 @@ namespace Chris.Gameplay.Flow.Utilities
         #region Capture
         
         /// <summary>
-        /// Screenshot and save it to a new <see cref="Texture2D"/>
+        /// Capture screenshot from renderer and save it to a new <see cref="Texture2D"/>.
         /// </summary>
         /// <param name="camera"></param>
         /// <param name="size"></param>
         /// <param name="depthBuffer"></param>
         /// <param name="renderTextureFormat"></param>
         /// <returns></returns>
-        [ExecutableFunction, CeresLabel("Capture Screen Shot to Texture2D"), CeresGroup("Gameplay/Capture")]
-        public static Texture2D Flow_CaptureScreenShotToTexture2D(Camera camera, Vector2 size, 
+        [ExecutableFunction, CeresLabel("Capture Screen Shot as Texture2D"), CeresGroup("Gameplay/Capture")]
+        public static Texture2D Flow_CaptureScreenShotAsTexture2D(Camera camera, Vector2 size, 
             int depthBuffer = 24, RenderTextureFormat renderTextureFormat = RenderTextureFormat.ARGB32)
         {
             int antiAliasing = Mathf.Max(1, QualitySettings.antiAliasing);
@@ -153,6 +153,27 @@ namespace Chris.Gameplay.Flow.Utilities
                 Camera = camera,
                 Destination = screenTexture,
                 FromRenderer = true
+            }); 
+            var captureTex = screenTexture.ToTexture2D();
+            RenderTexture.ReleaseTemporary(screenTexture);
+            return captureTex;
+        }
+        
+        /// <summary>
+        /// Capture screenshot from screen and save it to a new <see cref="Texture2D"/>.
+        /// </summary>
+        /// <returns></returns>
+        [ExecutableFunction, CeresLabel("Capture Screen Shot to Texture2D with UI"), CeresGroup("Gameplay/Capture")]
+        public static Texture2D Flow_CaptureScreenShotAsTexture2DFromScreen()
+        {
+            var screenSize = GameView.GetSizeOfMainGameView();
+            int antiAliasing = Mathf.Max(1, QualitySettings.antiAliasing);
+            var screenTexture = RenderTexture.GetTemporary((int)screenSize.x, (int)screenSize.y, 
+                24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default, antiAliasing);
+            ScreenShotUtils.CaptureScreenShot(new ScreenShotRequest
+            {
+                Destination = screenTexture,
+                FromRenderer = false
             }); 
             var captureTex = screenTexture.ToTexture2D();
             RenderTexture.ReleaseTemporary(screenTexture);
