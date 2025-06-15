@@ -23,14 +23,9 @@ namespace Chris.Gameplay.Editor
         internal static void SaveSettings()
         {
             instance.Save(true);
-            var serializer = new SaveLoadSerializer(ConfigsModule.ConfigPersistentDirectory, ConfigsModule.ConfigExtension);
-            instance.ExportConfig(serializer);
-        }
-
-        private void ExportConfig(SaveLoadSerializer serializer)
-        {
+            var serializer = ConfigsModule.PersistentSerializer;
             var settings = WorldSubsystemSettings.Get();
-            settings.subsystemForceInitializeBeforeGet = subsystemForceInitializeBeforeGet;
+            settings.subsystemForceInitializeBeforeGet = instance.subsystemForceInitializeBeforeGet;
             settings.Save(serializer);
         }
     }

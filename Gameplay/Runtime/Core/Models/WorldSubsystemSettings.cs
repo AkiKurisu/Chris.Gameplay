@@ -7,6 +7,7 @@ namespace Chris.Gameplay
     /// Settings for <see cref="WorldSubsystem"/>
     /// </summary>
     [Serializable]
+    [ConfigPath("Chris.Gameplay.WorldSubsystem")]
     public class WorldSubsystemSettings: Config<WorldSubsystemSettings>
     {
         /// <summary>

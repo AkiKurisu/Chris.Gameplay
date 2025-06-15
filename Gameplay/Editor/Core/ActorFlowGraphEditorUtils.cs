@@ -45,7 +45,7 @@ namespace Chris.Gameplay.Editor
             FlowGraphData data)
         {
             var serializer = new SaveLoadSerializer(flowPath, "json", TextSerializeFormatter.Instance);
-            serializer.Save(path, data);
+            serializer.Serialize(path, data);
             UDebug.Log($"Export {container.GetIdentifier()} remote asset to {Path.Combine(flowPath, $"{path}.json")}");
         }
 

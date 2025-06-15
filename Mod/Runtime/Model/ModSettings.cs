@@ -8,6 +8,7 @@ namespace Chris.Mod
     /// Configuration of mod importer
     /// </summary>
     [Serializable]
+    [ConfigPath("Chris.Mod")]
     public class ModSettings: Config<ModSettings>
     {
         public string LoadingPath { get; set; } = ImportConstants.LoadingPath;

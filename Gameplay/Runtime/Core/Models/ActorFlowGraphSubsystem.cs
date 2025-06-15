@@ -45,7 +45,7 @@ namespace Chris.Gameplay
                 if (_serializer.Exists(remotePath))
                 {
                     asset = ScriptableObject.CreateInstance<FlowGraphAsset>();
-                    var data = _serializer.Load<FlowGraphData>(remotePath);
+                    var data = _serializer.Deserialize<FlowGraphData>(remotePath);
                     asset.SetGraphData(data);
                     _remoteFlowGraph.Add(remotePath, asset);
                     return asset;
