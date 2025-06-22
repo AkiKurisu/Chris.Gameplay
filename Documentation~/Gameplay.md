@@ -86,6 +86,16 @@ Recommend to use [Unity PlayableGraph Monitor](`https://github.com/SolarianZ/Uni
 
 ![FX Audios](./Images/fx_audio.png)
 
+## Capture
+
+`ScreenshotTool` is a tool for taking screenshot in game and editor, intergrated with `Ceres.Flow`.
+
+Support two kinds of modes:
+
+1. Capture from camera.
+2. Capture from screen color buffer.
+
+![ScreenshotTool](./Images/screenshot_tool.png)
 
 ## Actor Hotupdate
 

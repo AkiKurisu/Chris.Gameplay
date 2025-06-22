@@ -7,7 +7,7 @@ using UnityEngine.Assertions;
 namespace Chris.Gameplay
 {
     /// <summary>
-    /// Struct to represent an GamePlay actor level entity
+    /// Struct to represent a Gameplay actor level entity
     /// </summary>
     public readonly struct ActorHandle
     {
@@ -61,7 +61,7 @@ namespace Chris.Gameplay
         }
     }
     /// <summary>
-    /// World container in GamePlay level.
+    /// World container in Gameplay level.
     /// </summary>
     public class GameWorld : MonoBehaviour
     {

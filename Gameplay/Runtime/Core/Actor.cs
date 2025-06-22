@@ -9,7 +9,7 @@ using UnityEngine.Assertions;
 namespace Chris.Gameplay
 {
     /// <summary>
-    /// Actor is a MonoBehaviour to place GameObject in GamePlay level.
+    /// Actor is a MonoBehaviour to place GameObject in Gameplay level.
     /// </summary>
     public class Actor : FlowGraphObject
     {
