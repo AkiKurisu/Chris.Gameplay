@@ -90,6 +90,7 @@ namespace Chris.Gameplay.Capture
         private void ProcessPicture(Texture2D target)
         {
             // Encode
+            _captureTex = target;
             var byteArray = target.EncodeToPNG();
             GalleryUtility.SavePngToGallery(byteArray);
 
@@ -102,6 +103,7 @@ namespace Chris.Gameplay.Capture
             }
 
             DestroySafe(_captureTex);
+            _captureTex = null;
 #endif
         }
         
