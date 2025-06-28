@@ -183,6 +183,16 @@ namespace Chris.Gameplay.Flow.Utilities
                 Destination = screenTexture,
                 Mode = ScreenshotMode.Camera
             }); 
+            
+#if UNITY_EDITOR
+            if (Application.isEditor)
+            {
+                var result = screenTexture.ToTexture2D();
+                onComplete?.Invoke(result);
+                RenderTexture.ReleaseTemporary(screenTexture);
+                return;
+            }
+#endif
             screenTexture.ToTexture2DAsync(result =>
             {
                 onComplete?.Invoke(result);
