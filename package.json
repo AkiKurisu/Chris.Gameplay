@@ -11,10 +11,16 @@
     "Mod"
   ],
   "category": "Tools",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AkiKurisu/Chris.Gameplay.git"
+  },
   "author": {
     "name": "AkiKurisu",
     "url": "https://github.com/AkiKurisu"
   },
+  "changelogUrl": "https://github.com/AkiKurisu/Chris.Gameplay/releases",
+  "licensesUrl": "https://github.com/AkiKurisu/Chris.Gameplay/blob/master/LICENSE",
   "dependencies": {
     "com.kurisu.chris": "1.4.1",
     "com.kurisu.ceres": "0.5.2"
