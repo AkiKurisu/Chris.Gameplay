@@ -1,4 +1,4 @@
-﻿using Chris.Configs;
+﻿using Chris.Configs.Editor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -22,7 +22,7 @@ namespace Chris.Gameplay.Editor
         internal static void SaveSettings()
         {
             instance.Save(true);
-            var serializer = ConfigsModule.PersistentSerializer;
+            var serializer = ConfigsEditorUtils.GetConfigSerializer();
             var settings = WorldSubsystemSettings.Get();
             settings.subsystemForceInitializeBeforeGet = instance.subsystemForceInitializeBeforeGet;
             settings.Save(serializer);

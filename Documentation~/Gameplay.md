@@ -199,5 +199,5 @@ Saved path mentioned above is different for different platforms.
 
 | Platform    | Path                            |
 | ----------- | :-----------------------------: |
-| Windows     | `Build Path`/Saved              |
-| Android     | `Persistent Data Path`/Saved    |
+| Windows     | `Build Path` / Saved              |
+| Android     | `Persistent Data Path` / Saved    |

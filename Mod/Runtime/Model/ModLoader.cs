@@ -34,19 +34,19 @@ namespace Chris.Mod
     
     public class ModLoader : IModLoader
     {
-        private readonly ModSettings _modSettingData;
+        private readonly ModConfig _modConfigData;
         
         private readonly IModValidator _validator;
         
-        public ModLoader(ModSettings modSettingData, IModValidator validator)
+        public ModLoader(ModConfig modConfigData, IModValidator validator)
         {
-            _modSettingData = modSettingData;
+            _modConfigData = modConfigData;
             _validator = validator;
         }
         
         public async UniTask<bool> LoadAllModsAsync(List<ModInfo> modInfos)
         {
-            string modPath = _modSettingData.LoadingPath;
+            string modPath = _modConfigData.LoadingPath;
             if (!Directory.Exists(modPath))
             {
                 Directory.CreateDirectory(modPath);
@@ -76,7 +76,7 @@ namespace Chris.Mod
             for (int i = configPaths.Count - 1; i >= 0; i--)
             {
                 var modInfo = await ModAPI.LoadModInfo(configPaths[i]);
-                var state = _modSettingData.GetModState(modInfo);
+                var state = _modConfigData.GetModState(modInfo);
                 if (state == ModState.Enabled)
                 {
                     modInfos.Add(modInfo);
@@ -100,13 +100,13 @@ namespace Chris.Mod
             return true;
         }
         
-        public async UniTask<ModInfo> LoadModAsync(ModSettings settingData, string path)
+        public async UniTask<ModInfo> LoadModAsync(ModConfig configData, string path)
         {
             var configs = Directory.GetFiles(path, "*.cfg");
             if (configs.Length == 0) return null;
             string config = configs[0];
             var modInfo = await ModAPI.LoadModInfo(config);
-            var state = settingData.GetModState(modInfo);
+            var state = configData.GetModState(modInfo);
             if (state == ModState.Enabled)
             {
                 if (!_validator.ValidateMod(modInfo))

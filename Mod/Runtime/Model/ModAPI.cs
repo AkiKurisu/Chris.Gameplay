@@ -17,15 +17,15 @@ namespace Chris.Mod
         
         private static readonly List<ModInfo> ModInfos = new();
         
-        private static ModSettings _setting;
+        private static ModConfig _config;
         
         /// <summary>
         /// Initialize api and load all mods
         /// </summary>
-        /// <param name="modSetting"></param>
+        /// <param name="modConfig"></param>
         /// <param name="modLoader"></param>
         /// <returns></returns>
-        public static async UniTask Initialize(ModSettings modSetting, IModLoader modLoader = default)
+        public static async UniTask Initialize(ModConfig modConfig, IModLoader modLoader = default)
         {
             if (IsModInit.Value)
             {
@@ -33,11 +33,11 @@ namespace Chris.Mod
                 return;
             }
             Debug.Log("[Mod API] Initialize mod api...");
-            modLoader ??= new ModLoader(modSetting, new APIValidator(ImportConstants.APIVersion));
-            _setting = modSetting;
+            modLoader ??= new ModLoader(modConfig, new APIValidator(ImportConstants.APIVersion));
+            _config = modConfig;
             if (await modLoader.LoadAllModsAsync(ModInfos))
             {
-                _setting.stateInfos.RemoveAll(x => ModInfos.All(y => y.FullName != x.modFullName));
+                _config.stateInfos.RemoveAll(x => ModInfos.All(y => y.FullName != x.modFullName));
                 IsModInit.Value = true;
             }
         }
@@ -53,8 +53,8 @@ namespace Chris.Mod
                 Debug.LogError("[Mod API] Mod api is not initialized");
                 return;
             }
-            if (_setting.GetModState(modInfo) == ModState.Delate) return;
-            _setting.DeleteMod(modInfo);
+            if (_config.GetModState(modInfo) == ModState.Delate) return;
+            _config.DeleteMod(modInfo);
             ModInfos.Remove(modInfo);
             modInfo.Dispose();
             OnModRefresh.OnNext(Unit.Default);
@@ -72,8 +72,8 @@ namespace Chris.Mod
                 Debug.LogError("[Mod API] Mod api is not initialized");
                 return;
             }
-            if (_setting.GetModState(modInfo) == (isEnabled ? ModState.Enabled : ModState.Disabled)) return;
-            _setting.SetModEnabled(modInfo, isEnabled);
+            if (_config.GetModState(modInfo) == (isEnabled ? ModState.Enabled : ModState.Disabled)) return;
+            _config.SetModEnabled(modInfo, isEnabled);
             OnModRefresh.OnNext(Unit.Default);
         }
         
@@ -89,7 +89,7 @@ namespace Chris.Mod
                 Debug.LogError("[Mod API] Mod api is not initialized");
                 return ModState.Disabled;
             }
-            return _setting.GetModState(modInfo);
+            return _config.GetModState(modInfo);
         }
         
         /// <summary>
