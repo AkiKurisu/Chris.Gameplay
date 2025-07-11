@@ -40,8 +40,6 @@ Mod workflow based on Addressables.
 
 [yasirkula/NativeGallery](https://github.com/yasirkula/UnityNativeGallery) - A native plugin to interact with Gallery/Photos on Android & iOS.
 
-[yasirkula/UnityIngameDebugConsole](https://github.com/yasirkula/UnityIngameDebugConsole) - A uGUI based console during gameplay.
-
 [AkiKurisu/Chris](https://github.com/AkiKurisu/Chris) - Development framework.
 
 [AkiKurisu/Ceres](https://github.com/AkiKurisu/Ceres) - Visual scripting toolkit.
