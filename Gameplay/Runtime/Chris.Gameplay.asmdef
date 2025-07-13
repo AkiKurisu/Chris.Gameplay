@@ -20,15 +20,7 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [
-        "CERES_INSTALL"
-    ],
-    "versionDefines": [
-        {
-            "name": "com.kurisu.ceres",
-            "expression": "0.5.0",
-            "define": "CERES_INSTALL"
-        }
-    ],
+    "defineConstraints": [],
+    "versionDefines": [],
     "noEngineReferences": false
 }

@@ -50,7 +50,7 @@ namespace Chris.Gameplay
         {
             if (_systems.TryGetValue(typeof(T), out var subsystem))
             {
-                if (WorldSubsystemSettings.Get().subsystemForceInitializeBeforeGet)
+                if (GameplayConfig.Get().subsystemForceInitializeBeforeGet)
                 {
                     subsystem.InternalInit();
                 }
@@ -63,7 +63,7 @@ namespace Chris.Gameplay
         {
             if (_systems.TryGetValue(type, out var subsystem))
             {
-                if (WorldSubsystemSettings.Get().subsystemForceInitializeBeforeGet)
+                if (GameplayConfig.Get().subsystemForceInitializeBeforeGet)
                 {
                     subsystem.InternalInit();
                 }

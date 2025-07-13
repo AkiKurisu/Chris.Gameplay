@@ -28,6 +28,12 @@ namespace Chris.Gameplay
 
         public FlowGraphAsset GetFlowGraphAsset(string address)
         {
+            // Not enabled
+            if (!GameplayConfig.Get().enableRemoteUpdate)
+            {
+                return null;
+            }
+            
             // Already loaded
             if (ActorFlowGraphDataTableManager.Get().TryGetFlowGraphAsset(address, out var flowGraphAsset))
             {

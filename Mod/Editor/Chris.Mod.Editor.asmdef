@@ -19,15 +19,8 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [
-        "AF_ADDRESSABLES_INSATLL",
         "!UNITY_6000"
     ],
-    "versionDefines": [
-        {
-            "name": "com.unity.addressables",
-            "expression": "1.21.0",
-            "define": "AF_ADDRESSABLES_INSATLL"
-        }
-    ],
+    "versionDefines": [],
     "noEngineReferences": false
 }

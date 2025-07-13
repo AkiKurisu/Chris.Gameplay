@@ -4,12 +4,17 @@ using Chris.Configs;
 namespace Chris.Gameplay
 {
     /// <summary>
-    /// Settings for <see cref="WorldSubsystem"/>
+    /// Gameplay config
     /// </summary>
     [Serializable]
-    [ConfigPath("Chris.Gameplay.WorldSubsystem")]
-    public class WorldSubsystemSettings: Config<WorldSubsystemSettings>
+    [ConfigPath("Chris.Gameplay")]
+    public class GameplayConfig: Config<GameplayConfig>
     {
+        /// <summary>
+        /// Whether to enable per-actor remote update.
+        /// </summary>
+        public bool enableRemoteUpdate;
+        
         /// <summary>
         /// Whether to ensure that world subsystem is initialized before getting the system instance.
         /// </summary>

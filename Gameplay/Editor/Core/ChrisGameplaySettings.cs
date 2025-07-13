@@ -15,6 +15,8 @@ namespace Chris.Gameplay.Editor
     [FilePath("ProjectSettings/ChrisGameplaySettings.asset", FilePathAttribute.Location.ProjectFolder)]
     public class ChrisGameplaySettings : ScriptableSingleton<ChrisGameplaySettings>
     {
+        public bool enableRemoteUpdate;
+        
         public RemoteUpdateSerializeMode remoteUpdateSerializeMode = RemoteUpdateSerializeMode.AssetBundle;
 
         public bool subsystemForceInitializeBeforeGet = true;
@@ -23,9 +25,10 @@ namespace Chris.Gameplay.Editor
         {
             instance.Save(true);
             var serializer = ConfigsEditorUtils.GetConfigSerializer();
-            var settings = WorldSubsystemSettings.Get();
-            settings.subsystemForceInitializeBeforeGet = instance.subsystemForceInitializeBeforeGet;
-            settings.Save(serializer);
+            var config = GameplayConfig.Get();
+            config.enableRemoteUpdate = instance.enableRemoteUpdate;
+            config.subsystemForceInitializeBeforeGet = instance.subsystemForceInitializeBeforeGet;
+            config.Save(serializer);
         }
     }
 
@@ -42,6 +45,9 @@ namespace Chris.Gameplay.Editor
             
             public static readonly GUIContent SubsystemForceInitializeBeforeGetLabel = new("Force Initialize Before Get", 
                 "Whether to ensure that world subsystem is initialized before getting the system instance.");
+            
+            public static readonly GUIContent EnableRemoteUpdateLabel = new("Enable Remote Update", 
+                "Whether to enable per-actor remote update.");
         }
 
         private ChrisGameplaySettingsProvider(string path, SettingsScope scope = SettingsScope.User)
@@ -65,6 +71,8 @@ namespace Chris.Gameplay.Editor
         {
             GUILayout.BeginVertical("Remote Update", GUI.skin.box);
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
+            EditorGUILayout.PropertyField(_settingsObject.FindProperty(nameof(ChrisGameplaySettings.enableRemoteUpdate)),
+                Styles.EnableRemoteUpdateLabel);
             EditorGUILayout.PropertyField(_settingsObject.FindProperty(nameof(ChrisGameplaySettings.remoteUpdateSerializeMode)),
                 Styles.RemoteUpdateSerializeModeLabel);
             if (_settingsObject.ApplyModifiedPropertiesWithoutUndo())
