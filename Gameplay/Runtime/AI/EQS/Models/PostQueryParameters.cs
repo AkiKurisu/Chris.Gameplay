@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Profiling;
 using UnityEngine;
+
 namespace Chris.AI.EQS
 {
     /// <summary>

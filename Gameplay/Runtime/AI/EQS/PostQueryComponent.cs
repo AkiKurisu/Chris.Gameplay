@@ -2,6 +2,7 @@ using System;
 using Chris.Gameplay;
 using Unity.Mathematics;
 using UnityEngine;
+
 namespace Chris.AI.EQS
 {
     /// <summary>

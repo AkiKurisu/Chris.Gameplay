@@ -23,7 +23,7 @@ Experimental modules need additional dependencies and are not stable.
 
 ### [AI](./Documentation~/AI.md)
 
-Personal AI tools from AAA games research. 
+AI tools from AAA games research. 
 
 ![FieldViewPrime](./Documentation~/Images/fov-prime.gif)
 
@@ -43,8 +43,6 @@ Mod workflow based on Addressables.
 [AkiKurisu/Chris](https://github.com/AkiKurisu/Chris) - Development framework.
 
 [AkiKurisu/Ceres](https://github.com/AkiKurisu/Ceres) - Visual scripting toolkit.
-
-[AkiKurisu/AkiBT](https://github.com/AkiKurisu/AkiBT) - Node based behavior tree editor.
 
 ## License
 

@@ -79,13 +79,25 @@ namespace Chris.AI.EQS
             Physics.Linecast(fromPosition, target, out RaycastHit hit, layerMask);
             if (hit.collider != null)
             {
-                if (hit.collider.CompareTags(filterTags) == false)
+                if (CompareTags(hit.collider, filterTags) == false)
                 {
                     Debug.DrawLine(hit.point, fromPosition, Color.cyan);
                     isVisible = false;
                 }
             }
             return isVisible;
+        }
+        
+        private static bool CompareTags(Component target, string[] allowedTags)
+        {
+            if (target == null || allowedTags == null) return false;
+
+            bool match = false;
+            foreach (string tag in allowedTags)
+            {
+                if (target.CompareTag(tag)) match = true;
+            }
+            return match;
         }
         
         public readonly NativeArray<Vector3> AllocatePolygonCorners(Vector3 position, Quaternion rotation, Allocator allocator)
