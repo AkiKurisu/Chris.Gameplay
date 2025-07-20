@@ -7,7 +7,19 @@ Gameplay modules for [Chris](https://github.com/AkiKurisu/Chris) framework.
 </div>
 
 ## Install
-To install `Chris.Gameplay`, use git URL to download package by Unity Package Manager ```https://github.com/AkiKurisu/Chris.Gameplay.git```
+
+Add following dependencies to `manifest.json`.
+
+```json
+  "dependencies": {
+    "com.kurisu.chris": "https://github.com/AkiKurisu/Chris.git",
+    "com.kurisu.ceres": "https://github.com/AkiKurisu/Ceres.git",
+    "com.cysharp.unitask":"https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask"
+  }
+
+```
+
+Use git URL to download package by Unity Package Manager ```https://github.com/AkiKurisu/Chris.Gameplay.git```.
 
 ## Gameplay
 
