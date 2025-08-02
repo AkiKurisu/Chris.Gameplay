@@ -37,6 +37,16 @@ namespace Chris.Gameplay.Flow.Utilities
         
         #endregion
 
+        #region Actor
+        
+        [ExecutableFunction]
+        public static Actor Flow_GetActor(ActorHandle handle)
+        {
+            return GameWorld.Get().GetActor(handle);
+        }
+        
+        #endregion
+
         #region Audios
 
         [ExecutableFunction, CeresLabel("Play 2D AudioClip"), CeresGroup("Gameplay/Audios")]

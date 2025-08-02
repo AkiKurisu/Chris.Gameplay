@@ -105,6 +105,6 @@ namespace Chris.Mod.Editor
             }
         }
         
-        public void Write(ref ModInfo modInfo) { }
+        public void Write(ModInfo modInfo) { }
     }
 }

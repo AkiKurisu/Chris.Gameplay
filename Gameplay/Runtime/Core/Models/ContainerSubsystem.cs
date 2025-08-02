@@ -2,29 +2,80 @@ using System;
 using System.Collections.Generic;
 using Chris.Collections;
 using UnityEngine.Assertions;
+
 namespace Chris.Gameplay
 {
-    /// <summary>
-    /// World lifetime scope IOC subsystem
-    /// </summary>
-    [InitializeOnWorldCreate]
-    public class ContainerSubsystem : WorldSubsystem
+    public interface IContainerSubsystem
     {
-        private readonly IOCContainer _container = new();
+        /// <summary>
+        /// Register target type instance
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <typeparam name="T"></typeparam>
+        void Register<T>(T instance);
         
-        private readonly Dictionary<Type, Action<object>> _typeCallbackMap = new();
+        /// <summary>
+        /// Unregister target type instance
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <typeparam name="T"></typeparam>
+        void Unregister<T>(T instance);
 
-        public static ContainerSubsystem Get()
-        {
-            return GameWorld.Get()?.GetSubsystem<ContainerSubsystem>();
-        }
+        /// <summary>
+        /// Get target type instance
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        T Resolve<T>() where T : class;
         
         /// <summary>
         /// Register a callback when target type instance is registered
         /// </summary>
         /// <param name="callback"></param>
         /// <typeparam name="T"></typeparam>
-        public void RegisterCallback<T>(Action<T> callback)
+        void RegisterCallback<T>(Action<T> callback);
+    }
+    
+    /// <summary>
+    /// World lifetime scope IOC subsystem
+    /// </summary>
+    [InitializeOnWorldCreate]
+    public class ContainerSubsystem : WorldSubsystem, IContainerSubsystem
+    {
+        private class Empty : IContainerSubsystem
+        {
+            public static readonly IContainerSubsystem Instance = new Empty();
+            
+            public void Register<T>(T instance)
+            {
+                
+            }
+
+            public void Unregister<T>(T instance)
+            {
+                
+            }
+
+            public T Resolve<T>() where T : class
+            {
+                return null;
+            }
+
+            public void RegisterCallback<T>(Action<T> callback)
+            {
+                
+            }
+        }
+        
+        private readonly IOCContainer _container = new();
+        
+        private readonly Dictionary<Type, Action<object>> _typeCallbackMap = new();
+
+        public static IContainerSubsystem Get()
+        {
+            return GameWorld.Get().GetSubsystem<ContainerSubsystem>() ?? Empty.Instance;
+        }
+        
+        void IContainerSubsystem.RegisterCallback<T>(Action<T> callback)
         {
             Assert.IsNotNull(callback, "[ContainerSubsystem] Instance callback is null, which is not expected.");
             var type = typeof(T);
@@ -38,12 +89,7 @@ namespace Chris.Gameplay
             }
         }
         
-        /// <summary>
-        /// Register target type instance
-        /// </summary>
-        /// <param name="instance"></param>
-        /// <typeparam name="T"></typeparam>
-        public void Register<T>(T instance)
+        void IContainerSubsystem.Register<T>(T instance)
         {
             _container.Register(instance);
             var type = typeof(T);
@@ -53,21 +99,12 @@ namespace Chris.Gameplay
             }
         }
         
-        /// <summary>
-        /// Unregister target type instance
-        /// </summary>
-        /// <param name="instance"></param>
-        /// <typeparam name="T"></typeparam>
-        public void Unregister<T>(T instance)
+        void IContainerSubsystem.Unregister<T>(T instance)
         {
             _container.Unregister(instance);
         }
         
-        /// <summary>
-        /// Get target type instance
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public T Resolve<T>() where T : class
+        T IContainerSubsystem.Resolve<T>() where T : class
         {
             return _container.Resolve<T>();
         }

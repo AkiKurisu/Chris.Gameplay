@@ -23,7 +23,7 @@ namespace Chris.Gameplay
 
         public static ActorFlowGraphSubsystem Get()
         {
-            return GameWorld.Get()?.GetSubsystem<ActorFlowGraphSubsystem>();
+            return GameWorld.Get().GetSubsystem<ActorFlowGraphSubsystem>();
         }
 
         public FlowGraphAsset GetFlowGraphAsset(string address)

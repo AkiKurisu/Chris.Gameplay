@@ -36,7 +36,7 @@ namespace Chris.Gameplay.Resource
                 _cache._isGlobal = false;
                 _cache.Dispose();
                 _cache = null;
-            }).AddTo(GameWorld.Get());
+            }).AddTo(GameWorld.Get().Cast());
             return _cache;
         }
         

@@ -9,6 +9,7 @@ using Chris.Pool;
 using Chris.Resource;
 using Chris.Schedulers;
 using UnityEngine.Scripting;
+
 namespace Chris.Gameplay.Audios
 {
     [Preserve]
@@ -22,7 +23,7 @@ namespace Chris.Gameplay.Audios
             if (!Application.isPlaying) return null;
 #endif
             if (_hookRoot != null) return _hookRoot;
-            _hookRoot = GameWorld.Get().transform;
+            _hookRoot = GameWorld.Get().Cast().transform;
             Disposable.Create(ReleaseAll).AddTo(_hookRoot);
             return _hookRoot;
         }

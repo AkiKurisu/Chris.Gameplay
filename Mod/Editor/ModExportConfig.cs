@@ -1,8 +1,13 @@
+using Chris.Resource.Editor;
 using Chris.Serialization;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
+
 namespace Chris.Mod.Editor
 {
+    /// <summary>
+    /// Scriptable mod export configuration
+    /// </summary>
     [CreateAssetMenu(fileName = "ModExportConfig", menuName = "Chris/Mod/ModExportConfig")]
     public class ModExportConfig : ScriptableObject
     {
@@ -31,6 +36,6 @@ namespace Chris.Mod.Editor
             return true;
         }
         
-        public AddressableAssetGroup Group => ModBuildUtility.GetOrCreateGroup($"Mod_{modName}");
+        public AddressableAssetGroup Group => ResourceEditorUtils.GetOrCreateAssetGroup($"Mod_{modName}");
     }
 }

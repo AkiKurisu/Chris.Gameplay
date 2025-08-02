@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using UnityEngine;
-using Object = UnityEngine.Object;
+
 namespace Chris.Mod
 {
     /// <summary>
     /// Class defines mod's information
     /// </summary>
     [Serializable]
-    public class ModInfo : IDisposable
+    public class ModInfo
     {
         #region Serialized Field
         public string apiVersion;
@@ -30,28 +29,7 @@ namespace Chris.Mod
         [JsonIgnore]
         public string FilePath { get; set; }
         
-        private Texture2D iconTexture;
-        
-        private Sprite iconSprite;
-        
-        [JsonIgnore]
-        public Sprite ModIcon => iconSprite = iconSprite != null ? iconSprite : CreateSpriteFromBytes(modIconBytes);
-        
         [JsonIgnore]
         public string FullName => modName + '-' + version + '-' + apiVersion;
-        
-        private Sprite CreateSpriteFromBytes(byte[] bytes)
-        {
-            if (bytes == null || bytes.Length == 0) return null;
-            iconTexture = new Texture2D(2, 2);
-            iconTexture.LoadImage(bytes);
-            return Sprite.Create(iconTexture, new Rect(0, 0, iconTexture.width, iconTexture.height), Vector2.zero);
-        }
-
-        public void Dispose()
-        {
-            if (iconSprite) Object.Destroy(iconSprite);
-            if (iconTexture) Object.Destroy(iconTexture);
-        }
     }
 }
