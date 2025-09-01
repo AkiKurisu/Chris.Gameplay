@@ -28,8 +28,8 @@ namespace Chris.Gameplay.Editor
                 .Select(AssetDatabase.GetAssetPath)
                 .Where(assetPath => !string.IsNullOrEmpty(assetPath))
                 .ToList();
-            bool canSerializeAsText = ChrisGameplaySettings.instance.remoteUpdateSerializeMode == RemoteUpdateSerializeMode.ForceText 
-                || !assetPaths.Any() && ChrisGameplaySettings.instance.remoteUpdateSerializeMode == RemoteUpdateSerializeMode.PreferText;
+            bool canSerializeAsText = ChrisGameplaySettings.Instance.remoteUpdateSerializeMode == RemoteUpdateSerializeMode.ForceText 
+                || !assetPaths.Any() && ChrisGameplaySettings.Instance.remoteUpdateSerializeMode == RemoteUpdateSerializeMode.PreferText;
             if (canSerializeAsText)
             {
                 BuildRemoteAssetText(container, flowPath, path, data);

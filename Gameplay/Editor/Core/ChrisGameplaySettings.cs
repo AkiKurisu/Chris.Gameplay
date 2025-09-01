@@ -1,4 +1,5 @@
 ﻿using Chris.Configs.Editor;
+using Chris.Editor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -12,8 +13,7 @@ namespace Chris.Gameplay.Editor
         ForceText
     }
     
-    [FilePath("ProjectSettings/ChrisGameplaySettings.asset", FilePathAttribute.Location.ProjectFolder)]
-    public class ChrisGameplaySettings : ScriptableSingleton<ChrisGameplaySettings>
+    public class ChrisGameplaySettings : ConfigSingleton<ChrisGameplaySettings>
     {
         public bool enableRemoteUpdate;
         
@@ -23,11 +23,11 @@ namespace Chris.Gameplay.Editor
         
         internal static void SaveSettings()
         {
-            instance.Save(true);
+            Instance.Save(true);
             var serializer = ConfigsEditorUtils.GetConfigSerializer();
             var config = GameplayConfig.Get();
-            config.enableRemoteUpdate = instance.enableRemoteUpdate;
-            config.subsystemForceInitializeBeforeGet = instance.subsystemForceInitializeBeforeGet;
+            config.enableRemoteUpdate = Instance.enableRemoteUpdate;
+            config.subsystemForceInitializeBeforeGet = Instance.subsystemForceInitializeBeforeGet;
             config.Save(serializer);
         }
     }
@@ -58,7 +58,7 @@ namespace Chris.Gameplay.Editor
         
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
-            _settingsObject = new SerializedObject(ChrisGameplaySettings.instance);
+            _settingsObject = new SerializedObject(ChrisGameplaySettings.Instance);
         }
         
         public override void OnGUI(string searchContext)

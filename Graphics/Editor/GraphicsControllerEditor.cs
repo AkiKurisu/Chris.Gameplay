@@ -233,15 +233,11 @@ namespace Chris.Graphics.Editor
 
                 EditorGUILayout.LabelField("Quick Presets", EditorStyles.boldLabel);
                 EditorGUILayout.BeginHorizontal();
-                if (GUILayout.Button("High Quality"))
+                if (GUILayout.Button("Enable All"))
                 {
                     SetAllEffects(true);
                 }
-                if (GUILayout.Button("Medium Quality"))
-                {
-                    SetMediumQualityPreset();
-                }
-                if (GUILayout.Button("Low Quality"))
+                if (GUILayout.Button("Disable All"))
                 {
                     SetAllEffects(false);
                 }
@@ -343,24 +339,6 @@ namespace Chris.Graphics.Editor
             settings.ContactShadows.Value = enabled;
             settings.ScreenSpaceReflection.Value = enabled;
             settings.VolumetricFog.Value = enabled;
-#endif
-        }
-
-        private static void SetMediumQualityPreset()
-        {
-            if (!Application.isPlaying) return;
-
-            var settings = GraphicsSettings.Get();
-            settings.AmbientOcclusion.Value = true;
-            settings.Bloom.Value = true;
-            settings.DepthOfField.Value = false;
-            settings.MotionBlur.Value = false;
-            settings.Tonemapping.Value = true;
-            settings.Vignette.Value = true;
-#if ILLUSION_RP_INSTALL
-            settings.ContactShadows.Value = false;
-            settings.ScreenSpaceReflection.Value = false;
-            settings.VolumetricFog.Value = false;
 #endif
         }
 
