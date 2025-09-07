@@ -35,9 +35,6 @@ namespace Chris.Graphics
         
         [JsonIgnore]
         public static readonly float[] RenderScalePresets = { 0.7f, 0.8f, 0.9f, 1.0f };
-    
-        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
-        public ReactiveProperty<bool> Tonemapping { get; set; } = new(true);
         
         [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
         public ReactiveProperty<bool> Vignette { get; set; } = new(true);

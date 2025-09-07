@@ -91,7 +91,6 @@ namespace Chris.Graphics
                 _settings.DepthOfField.Subscribe(SetDepthOfFieldEnabled).AddTo(ref d);
             }
             _settings.MotionBlur.Subscribe(SetMotionBlurEnabled).AddTo(ref d);
-            _settings.Tonemapping.Subscribe(SetTonemapping).AddTo(ref d);
             _settings.Vignette.Subscribe(SetVignetteEnabled).AddTo(ref d);
             _settings.RenderScale.Subscribe(SetRenderScale).AddTo(ref d);
 #if ILLUSION_RP_INSTALL
@@ -263,11 +262,6 @@ namespace Chris.Graphics
         private void SetBloomEnabled(bool isEnabled)
         {
             GetVolume(DynamicVolumeType.Bloom).weight = isEnabled ? 1f : 0f;
-        }
-        
-        private void SetTonemapping(bool isEnabled)
-        {
-            GetVolume(DynamicVolumeType.Tonemapping).weight = isEnabled ? 1f : 0f;
         }
         
 #if ILLUSION_RP_INSTALL

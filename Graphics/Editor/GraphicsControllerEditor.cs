@@ -221,7 +221,6 @@ namespace Chris.Graphics.Editor
                 DrawToggleSetting("Bloom", settings.Bloom);
                 DrawToggleSetting("Depth of Field", settings.DepthOfField);
                 DrawToggleSetting("Motion Blur", settings.MotionBlur);
-                DrawToggleSetting("Tonemapping", settings.Tonemapping);
                 DrawToggleSetting("Vignette", settings.Vignette);
 #if ILLUSION_RP_INSTALL
                 DrawToggleSetting("Contact Shadow", settings.ContactShadows);
@@ -333,7 +332,6 @@ namespace Chris.Graphics.Editor
             settings.Bloom.Value = enabled;
             settings.DepthOfField.Value = enabled;
             settings.MotionBlur.Value = enabled;
-            settings.Tonemapping.Value = enabled;
             settings.Vignette.Value = enabled;
 #if ILLUSION_RP_INSTALL
             settings.ContactShadows.Value = enabled;
