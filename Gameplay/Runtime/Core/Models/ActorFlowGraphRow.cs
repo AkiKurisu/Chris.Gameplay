@@ -49,6 +49,11 @@ namespace Chris.Gameplay
 
         protected override async UniTask Initialize(bool sync)
         {
+            if (!GameplayConfig.Get().enableRemoteUpdate)
+            {
+                return;
+            }
+            
             await InitializeSingleTable(TableKey, sync);
             var parallel = UniParallel.Get();
             foreach (var pair in DataTables.SelectMany(pair => pair.Value.GetRowMap()))

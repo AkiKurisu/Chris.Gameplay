@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Ceres.Graph.Flow.Annotations;
 using R3;
-using UnityEngine;
+
 namespace Chris.Gameplay
 {
     internal class WorldSubsystemCollection : IDisposable
@@ -12,26 +12,35 @@ namespace Chris.Gameplay
         private readonly Dictionary<Type, SubsystemBase> _systems;
         
         private SubsystemBase[] _subsystems;
+
+        private const string AssemblyName = "Chris.Gameplay";
         
-        private readonly IDisposable _actorsUpdateSubscription;
-        
-        public WorldSubsystemCollection(GameWorld world)
+        public WorldSubsystemCollection(WorldContext worldContext)
         {
-            var types = AppDomain.CurrentDomain
+            var typeList = AppDomain.CurrentDomain
                     .GetAssemblies()
-                    .Select(x => x.GetTypes())
-                    .SelectMany(x => x)
-                    .Where(x => x.IsSubclassOf(typeof(WorldSubsystem)) && !x.IsAbstract)
-                    .Where(x => x.GetCustomAttribute<InitializeOnWorldCreateAttribute>() != null)
+                    .Where(assembly =>
+                    {
+#if UNITY_EDITOR
+                        if (assembly.GetName().Name.Contains(".Editor"))
+                        {
+                            return false;
+                        }
+#endif
+                        return assembly.GetName().Name == AssemblyName ||
+                               assembly.GetReferencedAssemblies().Any(name => name.Name == AssemblyName);
+                    })
+                    .SelectMany(assembly => assembly.GetTypes())
+                    .Where(type => type.IsSubclassOf(typeof(WorldSubsystem)) && !type.IsAbstract)
+                    .Where(type => type.GetCustomAttribute<InitializeOnWorldCreateAttribute>() != null)
                     .ToList();
-            _systems = types.ToDictionary(x => x, x => Activator.CreateInstance(x) as SubsystemBase);
-            foreach (var type in types)
+            _systems = typeList.ToDictionary(type => type, type => Activator.CreateInstance(type) as SubsystemBase);
+            foreach (var type in typeList)
             {
-                if (!((WorldSubsystem)_systems[type]).CanCreate(world)) _systems.Remove(type);
-                else _systems[type].SetWorld(world);
+                if (!((WorldSubsystem)_systems[type]).CanCreate(worldContext)) _systems.Remove(type);
+                else _systems[type].SetWorld(worldContext);
             }
             _subsystems = _systems.Values.ToArray();
-            _actorsUpdateSubscription = world.OnActorsUpdate.Subscribe(OnActorsUpdate);
         }
         
         internal void RegisterSubsystem<T>(T subsystem) where T : SubsystemBase
@@ -50,7 +59,7 @@ namespace Chris.Gameplay
         {
             if (_systems.TryGetValue(typeof(T), out var subsystem))
             {
-                if (WorldSubsystemSettings.Get().subsystemForceInitializeBeforeGet)
+                if (GameplayConfig.Get().subsystemForceInitializeBeforeGet)
                 {
                     subsystem.InternalInit();
                 }
@@ -63,7 +72,7 @@ namespace Chris.Gameplay
         {
             if (_systems.TryGetValue(type, out var subsystem))
             {
-                if (WorldSubsystemSettings.Get().subsystemForceInitializeBeforeGet)
+                if (GameplayConfig.Get().subsystemForceInitializeBeforeGet)
                 {
                     subsystem.InternalInit();
                 }
@@ -96,6 +105,14 @@ namespace Chris.Gameplay
             }
         }
         
+        internal void SetDirtyOnActorsUpdate(Unit _)
+        {
+            for (int i = 0; i < _subsystems.Length; ++i)
+            {
+                _subsystems[i].IsActorsDirty = true;
+            }
+        }
+        
         public void Dispose()
         {
             for (int i = 0; i < _subsystems.Length; ++i)
@@ -103,15 +120,6 @@ namespace Chris.Gameplay
                 _subsystems[i].InternalRelease();
             }
             _subsystems = null;
-            _actorsUpdateSubscription.Dispose();
-        }
-        
-        private void OnActorsUpdate(Unit _)
-        {
-            for (int i = 0; i < _subsystems.Length; ++i)
-            {
-                _subsystems[i].IsActorsDirty = true;
-            }
         }
     }
     /// <summary>
@@ -137,7 +145,7 @@ namespace Chris.Gameplay
         /// <value></value>
         protected bool IsDestroyed { get; private set; }
 
-        private GameWorld _world;
+        private WorldContext _worldContext;
 
         /// <summary>
         /// Subsystem initialize phase, should bind callbacks and collect references in this phase
@@ -175,14 +183,14 @@ namespace Chris.Gameplay
         internal virtual void InternalRelease()
         {
             if (IsDestroyed) return;
-            _world = null;
+            _worldContext = default;
             IsDestroyed = true;
             Release();
         }
 
-        internal void SetWorld(GameWorld world)
+        internal void SetWorld(WorldContext worldContext)
         {
-            _world = world;
+            _worldContext = worldContext;
         }
 
         /// <summary>
@@ -190,7 +198,10 @@ namespace Chris.Gameplay
         /// </summary>
         /// <returns></returns>
         [ExecutableFunction]
-        public GameWorld GetWorld() => _world;
+        public GameWorld GetWorld()
+        {
+            return _worldContext.Cast();
+        }
 
         /// <summary>
         /// Get all actors in world, readonly
@@ -198,12 +209,7 @@ namespace Chris.Gameplay
         /// <returns></returns>
         protected void GetActorsInWorld(List<Actor> actors)
         {
-            if (!_world)
-            {
-                Debug.LogWarning("[World Subsystem] System not bound to an actor world.");
-                return;
-            }
-            foreach (var actor in _world.ActorsInWorld)
+            foreach (var actor in _worldContext.Cast().ActorsInWorld)
             {
                 actors.Add(actor);
             }
@@ -215,12 +221,7 @@ namespace Chris.Gameplay
         /// <returns></returns>
         protected int GetActorsNum()
         {
-            if (!_world)
-            {
-                Debug.LogWarning("[World Subsystem] System not bound to an actor world.");
-                return default;
-            }
-            return _world.ActorsInWorld.Count;
+            return _worldContext.Cast().ActorsInWorld.Count;
         }
     }
     
@@ -232,49 +233,36 @@ namespace Chris.Gameplay
         /// <summary>
         /// Whether <see cref="WorldSubsystem"/> can create
         /// </summary>
-        /// <param name="world"></param>
+        /// <param name="worldContext"></param>
         /// <returns></returns>
-        public virtual bool CanCreate(GameWorld world) => true;
-
-        /// <summary>
-        /// Get or create system if not registered
-        /// </summary>
-        /// <param name="world"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T GetOrCreate<T>(GameWorld world) where T : WorldSubsystem, new()
+        public virtual bool CanCreate(WorldContext worldContext)
         {
-            if (!GameWorld.IsValid()) return null;
-            
-            var system = world.GetSubsystem<T>();
+            return worldContext.IsValid();
+        }
+
+        private static T GetOrCreate_Internal<T>(WorldContext worldContext) where T : WorldSubsystem, new()
+        {
+            var system = worldContext.GetSubsystem<T>();
             if (system != null) return system;
             
             system = new T();
-            if (!system.CanCreate(world)) return null;
+            if (!system.CanCreate(worldContext)) return null;
             
-            system.SetWorld(world);
-            world.RegisterSubsystem(system);
+            system.SetWorld(worldContext);
+            worldContext.RegisterSubsystem(system);
             return system;
         }
-        
-        /// <summary>
-        /// Get or create system if not registered
-        /// </summary>
-        /// <param name="world"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static WorldSubsystem GetOrCreate(GameWorld world, Type type)
+
+        private static WorldSubsystem GetOrCreate_Internal(WorldContext worldContext, Type type)
         {
-            if (!GameWorld.IsValid()) return null;
-            
-            var system = (WorldSubsystem)world.GetSubsystem(type);
+            var system = (WorldSubsystem)worldContext.GetSubsystem(type);
             if (system != null) return system;
             
             system = (WorldSubsystem)Activator.CreateInstance(type);
-            if (!system.CanCreate(world)) return null;
+            if (!system.CanCreate(worldContext)) return null;
             
-            system.SetWorld(world);
-            world.RegisterSubsystem(system);
+            system.SetWorld(worldContext);
+            worldContext.RegisterSubsystem(system);
             return system;
         }
 
@@ -285,7 +273,7 @@ namespace Chris.Gameplay
         /// <returns></returns>
         public static T GetOrCreate<T>() where T : WorldSubsystem, new()
         {
-            return !GameWorld.IsValid() ? null : GetOrCreate<T>(GameWorld.Get());
+            return !GameWorld.IsValid() ? null : GetOrCreate_Internal<T>(GameWorld.Get());
         }
 
         /// <summary>
@@ -295,7 +283,7 @@ namespace Chris.Gameplay
         /// <returns></returns>
         public static WorldSubsystem GetOrCreate(Type type)
         {
-            return !GameWorld.IsValid() ? null : GetOrCreate(GameWorld.Get(), type);
+            return !GameWorld.IsValid() ? null : GetOrCreate_Internal(GameWorld.Get(), type);
         }
     }
 }

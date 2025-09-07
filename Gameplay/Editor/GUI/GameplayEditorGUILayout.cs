@@ -37,5 +37,24 @@ namespace Chris.Gameplay.Editor
 
             return foldout;
         }
+        
+        /// <summary>
+        /// Draws the built-in Inspector without showing Script field.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static bool DrawDefaultInspectorWithoutScript(SerializedObject obj)
+        {
+            EditorGUI.BeginChangeCheck();
+            obj.UpdateIfRequiredOrScript();
+            SerializedProperty iterator = obj.GetIterator();
+            for (bool enterChildren = true; iterator.NextVisible(enterChildren); enterChildren = false)
+            {
+                if ("m_Script" == iterator.propertyPath) continue;
+                EditorGUILayout.PropertyField(iterator, true);
+            }
+            obj.ApplyModifiedProperties();
+            return EditorGUI.EndChangeCheck();
+        }
     }
 }

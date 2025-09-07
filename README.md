@@ -7,7 +7,19 @@ Gameplay modules for [Chris](https://github.com/AkiKurisu/Chris) framework.
 </div>
 
 ## Install
-To install `Chris.Gameplay`, use git URL to download package by Unity Package Manager ```https://github.com/AkiKurisu/Chris.Gameplay.git```
+
+Add following dependencies to `manifest.json`.
+
+```json
+  "dependencies": {
+    "com.kurisu.chris": "https://github.com/AkiKurisu/Chris.git",
+    "com.kurisu.ceres": "https://github.com/AkiKurisu/Ceres.git",
+    "com.cysharp.unitask":"https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask"
+  }
+
+```
+
+Use git URL to download package by Unity Package Manager ```https://github.com/AkiKurisu/Chris.Gameplay.git```.
 
 ## Gameplay
 
@@ -23,7 +35,7 @@ Experimental modules need additional dependencies and are not stable.
 
 ### [AI](./Documentation~/AI.md)
 
-Personal AI tools from AAA games research. 
+AI tools from AAA games research. 
 
 ![FieldViewPrime](./Documentation~/Images/fov-prime.gif)
 
@@ -40,13 +52,9 @@ Mod workflow based on Addressables.
 
 [yasirkula/NativeGallery](https://github.com/yasirkula/UnityNativeGallery) - A native plugin to interact with Gallery/Photos on Android & iOS.
 
-[yasirkula/UnityIngameDebugConsole](https://github.com/yasirkula/UnityIngameDebugConsole) - A uGUI based console during gameplay.
-
 [AkiKurisu/Chris](https://github.com/AkiKurisu/Chris) - Development framework.
 
 [AkiKurisu/Ceres](https://github.com/AkiKurisu/Ceres) - Visual scripting toolkit.
-
-[AkiKurisu/AkiBT](https://github.com/AkiKurisu/AkiBT) - Node based behavior tree editor.
 
 ## License
 

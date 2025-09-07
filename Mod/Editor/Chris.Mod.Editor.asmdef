@@ -8,7 +8,8 @@
         "GUID:5c1ff9bd975acec488150743d53a93ca",
         "GUID:f89fabfdb21850749a165533f8f47943",
         "GUID:e61a2a07ba2680848ad23eef5b7c024b",
-        "GUID:84651a3751eca9349aac36a66bba901b"
+        "GUID:84651a3751eca9349aac36a66bba901b",
+        "GUID:e6234d6c1f7bf4e4db20eddc411c00b8"
     ],
     "includePlatforms": [
         "Editor"
@@ -19,15 +20,8 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [
-        "AF_ADDRESSABLES_INSATLL",
         "!UNITY_6000"
     ],
-    "versionDefines": [
-        {
-            "name": "com.unity.addressables",
-            "expression": "1.21.0",
-            "define": "AF_ADDRESSABLES_INSATLL"
-        }
-    ],
+    "versionDefines": [],
     "noEngineReferences": false
 }

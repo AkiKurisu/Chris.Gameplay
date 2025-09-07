@@ -26,7 +26,7 @@ namespace Chris.Gameplay
             public string actorAddress;
         }
         
-        private GameWorld _world;
+        private WorldContext _worldContext;
         
         private PlayerController _controller;
         
@@ -112,8 +112,11 @@ namespace Chris.Gameplay
         /// </summary>
         /// <returns></returns>
         [ExecutableFunction]
-        public GameWorld GetWorld() => _world;
-        
+        public GameWorld GetWorld()
+        {
+            return _worldContext.Cast();
+        }
+
         /// <summary>
         /// Get actor's id according to actor's world
         /// </summary>
@@ -127,8 +130,8 @@ namespace Chris.Gameplay
         /// <param name="actor"></param>
         protected static void RegisterActor(Actor actor)
         {
-            actor._world = GameWorld.Get();
-            actor._world.RegisterActor(actor, ref actor._handle);
+            actor._worldContext = GameWorld.Get();
+            actor._worldContext.RegisterActor(actor, ref actor._handle);
         }
         
         /// <summary>
@@ -137,9 +140,9 @@ namespace Chris.Gameplay
         /// <param name="actor"></param>
         protected static void UnregisterActor(Actor actor)
         {
-            if (actor._world == null || actor._world != GameWorld.Get()) return;
-            actor._world.UnregisterActor(actor);
-            actor._world = null;
+            if (actor._worldContext != GameWorld.Get()) return;
+            actor._worldContext.UnregisterActor(actor);
+            actor._worldContext = default;
             actor._handle = default;
         }
         

@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using R3;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+
 namespace Chris.Mod
 {
     public static class ModAPI
@@ -56,7 +57,6 @@ namespace Chris.Mod
             if (_config.GetModState(modInfo) == ModState.Delate) return;
             _config.DeleteMod(modInfo);
             ModInfos.Remove(modInfo);
-            modInfo.Dispose();
             OnModRefresh.OnNext(Unit.Default);
         }
         
@@ -148,7 +148,7 @@ namespace Chris.Mod
             }
             path = path.Replace(@"\", "/");
             string contentCatalog = File.ReadAllText(path, Encoding.UTF8);
-            File.WriteAllText(path, contentCatalog.Replace(ImportConstants.DynamicLoadPath, Path.GetDirectoryName(path).Replace(@"\", "/")), Encoding.UTF8);
+            File.WriteAllText(path, contentCatalog.Replace(ImportConstants.DynamicLoadPath, Path.GetDirectoryName(path)!.Replace(@"\", "/")), Encoding.UTF8);
             Debug.Log($"[Mod API] Load mod content catalog {path}");
             await Addressables.LoadContentCatalogAsync(path).ToUniTask();
             File.WriteAllText(path, contentCatalog, Encoding.UTF8);
@@ -163,7 +163,7 @@ namespace Chris.Mod
         public static async UniTask<ModInfo> LoadModInfo(string modInfoPath)
         {
             var modInfo = JsonConvert.DeserializeObject<ModInfo>(await File.ReadAllTextAsync(modInfoPath));
-            modInfo.FilePath = Path.GetDirectoryName(modInfoPath).Replace(@"\", "/");
+            modInfo.FilePath = Path.GetDirectoryName(modInfoPath)!.Replace(@"\", "/");
             return modInfo;
         }
 

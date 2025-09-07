@@ -10,7 +10,10 @@ using Newtonsoft.Json;
 
 namespace Chris.Mod.Editor
 {
-    public class ModExporter
+    /// <summary>
+    /// Exporter for per <see cref="ModExportConfig"/>
+    /// </summary>
+    public sealed class ModExporter
     {
         private readonly List<IModBuilder> _builders;
 
@@ -60,12 +63,12 @@ namespace Chris.Mod.Editor
         
         private static void LogError(string message)
         {
-            Debug.LogError($"<color=#ff2f2f>Exporter</color>: {message}");
+            Debug.LogError($"<color=#ff2f2f>Mod Exporter</color>: {message}");
         }
         
         private static void Log(string message)
         {
-            Debug.Log($"<color=#3aff48>Exporter</color>: {message}");
+            Debug.Log($"<color=#3aff48>Mod Exporter</color>: {message}");
         }
         
         private static bool ZipTogether(string buildPath, string zipPath)
@@ -86,7 +89,7 @@ namespace Chris.Mod.Editor
             };
             foreach (var builder in _builders)
             {
-                builder.Write(ref info);
+                builder.Write(info);
             }
             var stream = JsonConvert.SerializeObject(info);
             File.WriteAllText(buildPath + "/ModConfig.cfg", stream);

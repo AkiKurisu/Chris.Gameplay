@@ -1,4 +1,5 @@
 ﻿using Chris.Configs.Editor;
+using Chris.Editor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -12,20 +13,22 @@ namespace Chris.Gameplay.Editor
         ForceText
     }
     
-    [FilePath("ProjectSettings/ChrisGameplaySettings.asset", FilePathAttribute.Location.ProjectFolder)]
-    public class ChrisGameplaySettings : ScriptableSingleton<ChrisGameplaySettings>
+    public class ChrisGameplaySettings : ConfigSingleton<ChrisGameplaySettings>
     {
+        public bool enableRemoteUpdate;
+        
         public RemoteUpdateSerializeMode remoteUpdateSerializeMode = RemoteUpdateSerializeMode.AssetBundle;
 
         public bool subsystemForceInitializeBeforeGet = true;
         
         internal static void SaveSettings()
         {
-            instance.Save(true);
+            Instance.Save(true);
             var serializer = ConfigsEditorUtils.GetConfigSerializer();
-            var settings = WorldSubsystemSettings.Get();
-            settings.subsystemForceInitializeBeforeGet = instance.subsystemForceInitializeBeforeGet;
-            settings.Save(serializer);
+            var config = GameplayConfig.Get();
+            config.enableRemoteUpdate = Instance.enableRemoteUpdate;
+            config.subsystemForceInitializeBeforeGet = Instance.subsystemForceInitializeBeforeGet;
+            config.Save(serializer);
         }
     }
 
@@ -42,6 +45,9 @@ namespace Chris.Gameplay.Editor
             
             public static readonly GUIContent SubsystemForceInitializeBeforeGetLabel = new("Force Initialize Before Get", 
                 "Whether to ensure that world subsystem is initialized before getting the system instance.");
+            
+            public static readonly GUIContent EnableRemoteUpdateLabel = new("Enable Remote Update", 
+                "Whether to enable per-actor remote update.");
         }
 
         private ChrisGameplaySettingsProvider(string path, SettingsScope scope = SettingsScope.User)
@@ -52,7 +58,7 @@ namespace Chris.Gameplay.Editor
         
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
-            _settingsObject = new SerializedObject(ChrisGameplaySettings.instance);
+            _settingsObject = new SerializedObject(ChrisGameplaySettings.Instance);
         }
         
         public override void OnGUI(string searchContext)
@@ -65,6 +71,8 @@ namespace Chris.Gameplay.Editor
         {
             GUILayout.BeginVertical("Remote Update", GUI.skin.box);
             GUILayout.Space(EditorGUIUtility.singleLineHeight);
+            EditorGUILayout.PropertyField(_settingsObject.FindProperty(nameof(ChrisGameplaySettings.enableRemoteUpdate)),
+                Styles.EnableRemoteUpdateLabel);
             EditorGUILayout.PropertyField(_settingsObject.FindProperty(nameof(ChrisGameplaySettings.remoteUpdateSerializeMode)),
                 Styles.RemoteUpdateSerializeModeLabel);
             if (_settingsObject.ApplyModifiedPropertiesWithoutUndo())

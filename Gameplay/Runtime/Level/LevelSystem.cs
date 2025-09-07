@@ -123,9 +123,10 @@ namespace Chris.Gameplay.Level
             else
             {
                 /* Since Unity destroy and awake MonoBehaviour in same frame, need notify world still valid */
-                GameWorld.Pin();
-                _mainScene = await Addressables.LoadSceneAsync(singleScene.reference.Address).ToUniTask();
-                GameWorld.UnPin();
+                using (GameWorld.Pin())
+                {
+                    _mainScene = await Addressables.LoadSceneAsync(singleScene.reference.Address).ToUniTask();
+                }
             }
             // Parallel for the others
             using var parallel = UniParallel.Get();
