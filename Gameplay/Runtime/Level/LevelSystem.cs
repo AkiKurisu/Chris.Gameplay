@@ -4,6 +4,7 @@ using System.Linq;
 using Chris.DataDriven;
 using Chris.Pool;
 using Cysharp.Threading.Tasks;
+using R3;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
@@ -95,6 +96,20 @@ namespace Chris.Gameplay.Level
         
         
         private static SceneInstance _mainScene;
+        
+        private static readonly Subject<LevelReference> _levelPreload = new();
+                
+        private static readonly Subject<LevelReference> _levelPostLoad = new();
+
+        /// <summary>
+        /// Event when level start loading
+        /// </summary>
+        public static Observable<LevelReference> LevelPreload => _levelPreload;
+
+        /// <summary>
+        /// Event when level end loading
+        /// </summary>
+        public static Observable<LevelReference> LevelPostLoad => _levelPostLoad;
 
         public static async UniTask LoadAsync(string levelName)
         {
@@ -109,9 +124,10 @@ namespace Chris.Gameplay.Level
         {
             LastLevel = CurrentLevel;
             CurrentLevel = reference;
+            _levelPreload.OnNext(reference);
             // First check has single load scene
-            var singleScene = reference.Scenes.FirstOrDefault(x => x.loadMode == LoadLevelMode.Single);
-            bool hasDynamicScene = reference.Scenes.Any(x => x.loadMode == LoadLevelMode.Dynamic);
+            var singleScene = reference.Scenes.FirstOrDefault(row => row.loadMode == LoadLevelMode.Single);
+            bool hasDynamicScene = reference.Scenes.Any(row => row.loadMode == LoadLevelMode.Dynamic);
             if (singleScene == null)
             {
                 // Unload current main scene if there is no dynamic scene
@@ -138,6 +154,8 @@ namespace Chris.Gameplay.Level
                 }
             }
             await parallel;
+            
+            _levelPostLoad.OnNext(reference);
         }
     }
 }
