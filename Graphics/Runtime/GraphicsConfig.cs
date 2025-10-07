@@ -26,5 +26,7 @@ namespace Chris.Graphics
         public bool enableDepthOfField = true;
 
         public CameraSettings cameraSettings;
+
+        public Optional<int> targetFrameRate = new(60, false);
     }
 }

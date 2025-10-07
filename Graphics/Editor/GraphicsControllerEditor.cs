@@ -44,11 +44,11 @@ namespace Chris.Graphics.Editor
 
             EditorGUILayout.Space();
 
-            DrawVolumeDebugPanel();
+            DrawVolumeSettingsPanel();
 
             EditorGUILayout.Space();
 
-            DrawGraphicsSettingsDebugPanel();
+            DrawGraphicsSettingsPanel();
 
             EditorGUILayout.Space();
 
@@ -67,25 +67,25 @@ namespace Chris.Graphics.Editor
             EditorGUILayout.PropertyField(_graphicsConfigProperty);
         }
 
-        private void DrawVolumeDebugPanel()
+        private void DrawVolumeSettingsPanel()
         {
-            _showVolumeDebug = GameplayEditorGUILayout.Foldout(_showVolumeDebug, "Volume Debug");
+            _showVolumeDebug = GameplayEditorGUILayout.Foldout(_showVolumeDebug, "Volume Settings");
             if (!_showVolumeDebug) return;
 
             EditorGUI.indentLevel++;
 
-            EditorGUILayout.LabelField("Dynamic Volume Controls", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Dynamic Profiles", EditorStyles.boldLabel);
 
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Apply Dynamic Profiles", GUILayout.Height(25)))
+            if (GUILayout.Button("Reload", GUILayout.Height(20)))
             {
                 _target.ApplyDynamicVolumeProfiles();
             }
-            if (GUILayout.Button("Switch Windows", GUILayout.Height(25)))
+            if (GUILayout.Button("Switch Windows", GUILayout.Height(20)))
             {
                 _target.ApplyVolumeProfiles(DynamicVolumePlatform.Windows);
             }
-            if (GUILayout.Button("Switch Mobile", GUILayout.Height(25)))
+            if (GUILayout.Button("Switch Mobile", GUILayout.Height(20)))
             {
                 _target.ApplyVolumeProfiles(DynamicVolumePlatform.Mobile);
             }
@@ -189,9 +189,9 @@ namespace Chris.Graphics.Editor
             EditorGUI.indentLevel--;
         }
 
-        private void DrawGraphicsSettingsDebugPanel()
+        private void DrawGraphicsSettingsPanel()
         {
-            _showGraphicsSettings = GameplayEditorGUILayout.Foldout(_showGraphicsSettings, "Graphics Settings Debug");
+            _showGraphicsSettings = GameplayEditorGUILayout.Foldout(_showGraphicsSettings, "Graphics Settings");
             if (!_showGraphicsSettings) return;
 
             EditorGUI.indentLevel++;
@@ -295,18 +295,15 @@ namespace Chris.Graphics.Editor
             EditorGUI.indentLevel--;
         }
 
-        private void DrawQuickActionButtons()
+        private static void DrawQuickActionButtons()
         {
-            EditorGUILayout.LabelField("Quick Actions", EditorStyles.boldLabel);
-
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Reset All Volumes", GUILayout.Height(30)))
+            using (new EditorGUI.DisabledScope(!Application.isPlaying))
             {
-                ResetAllVolumes();
-            }
-            if (GUILayout.Button("Save Settings", GUILayout.Height(30)))
-            {
-                SaveGraphicsSettings();
+                if (GUILayout.Button("Save Settings"))
+                {
+                    SaveGraphicsSettings();
+                }
             }
             EditorGUILayout.EndHorizontal();
         }
@@ -338,21 +335,6 @@ namespace Chris.Graphics.Editor
             settings.ScreenSpaceReflection.Value = enabled;
             settings.VolumetricFog.Value = enabled;
 #endif
-        }
-
-        private void ResetAllVolumes()
-        {
-            if (!Application.isPlaying) return;
-
-            var volumeTypes = Enum.GetValues(typeof(DynamicVolumeType));
-            foreach (DynamicVolumeType volumeType in volumeTypes)
-            {
-                var volume = _target.GetVolume(volumeType);
-                if (volume != null)
-                {
-                    volume.weight = 1f;
-                }
-            }
         }
 
         private static void SaveGraphicsSettings()

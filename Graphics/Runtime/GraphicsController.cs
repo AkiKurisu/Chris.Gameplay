@@ -10,6 +10,7 @@ using System.Linq;
 #if ILLUSION_RP_INSTALL
 using Illusion.Rendering;
 #endif
+
 namespace Chris.Graphics
 {
     /// <summary>
@@ -69,6 +70,7 @@ namespace Chris.Graphics
             {
                 ApplyDynamicVolumeProfiles();
                 SetDepthOfFieldEnabled(Application.isPlaying && graphicsConfig.enableDepthOfField);
+                ApplyFrameRate();
             }
             
 #if UNITY_EDITOR
@@ -105,6 +107,16 @@ namespace Chris.Graphics
             foreach (var module in _graphicsModules)
             {
                 module?.Initialize(this, _settings);
+            }
+        }
+
+        private void ApplyFrameRate()
+        {
+            if (!Application.isPlaying) return;
+            
+            if (graphicsConfig.targetFrameRate.Enabled)
+            {
+                Application.targetFrameRate = Mathf.Max(1, graphicsConfig.targetFrameRate.Value);
             }
         }
 
