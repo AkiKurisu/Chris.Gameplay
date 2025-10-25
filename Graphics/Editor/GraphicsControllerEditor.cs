@@ -36,13 +36,16 @@ namespace Chris.Graphics.Editor
 
             DrawBasicConfig();
 
-            EditorGUILayout.Space();
+            if (_target.graphicsConfig)
+            {
+                EditorGUILayout.Space();
 
-            DrawVolumeSettingsPanel();
+                DrawVolumeSettingsPanel();
 
-            EditorGUILayout.Space();
+                EditorGUILayout.Space();
 
-            DrawGraphicsSettingsPanel();
+                DrawGraphicsSettingsPanel();
+            }
 
             serializedObject.ApplyModifiedProperties();
         }
@@ -85,20 +88,26 @@ namespace Chris.Graphics.Editor
             
             EditorGUILayout.PropertyField(_graphicsConfigProperty);
             
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Reload", GUILayout.Height(20)))
+            using (new EditorGUI.DisabledScope(!_target.graphicsConfig))
             {
-                _target.ApplyDynamicVolumeProfiles();
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Reload", GUILayout.Height(20)))
+                {
+                    _target.ApplyDynamicVolumeProfiles();
+                }
+
+                if (GUILayout.Button("Switch Windows", GUILayout.Height(20)))
+                {
+                    _target.ApplyVolumeProfiles(DynamicVolumePlatform.Windows);
+                }
+
+                if (GUILayout.Button("Switch Mobile", GUILayout.Height(20)))
+                {
+                    _target.ApplyVolumeProfiles(DynamicVolumePlatform.Mobile);
+                }
+
+                EditorGUILayout.EndHorizontal();
             }
-            if (GUILayout.Button("Switch Windows", GUILayout.Height(20)))
-            {
-                _target.ApplyVolumeProfiles(DynamicVolumePlatform.Windows);
-            }
-            if (GUILayout.Button("Switch Mobile", GUILayout.Height(20)))
-            {
-                _target.ApplyVolumeProfiles(DynamicVolumePlatform.Mobile);
-            }
-            EditorGUILayout.EndHorizontal();
         }
 
         private void DrawVolumeSettingsPanel()
@@ -119,8 +128,10 @@ namespace Chris.Graphics.Editor
             var volumeTypes = Enum.GetValues(typeof(DynamicVolumeType));
             foreach (DynamicVolumeType volumeType in volumeTypes)
             {
+                if (volumeType == DynamicVolumeType.DepthOfField && !_target.graphicsConfig.enableDepthOfField) continue;
+                
                 var volume = _target.GetVolume(volumeType);
-                if (volume != null)
+                if (volume)
                 {
                     EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.LabelField($"{volumeType}", GUILayout.Width(180));
