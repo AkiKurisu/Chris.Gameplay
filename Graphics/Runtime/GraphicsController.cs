@@ -70,7 +70,6 @@ namespace Chris.Graphics
             {
                 ApplyDynamicVolumeProfiles();
                 SetDepthOfFieldEnabled(Application.isPlaying && graphicsConfig.enableDepthOfField);
-                ApplyFrameRate();
             }
             
 #if UNITY_EDITOR
@@ -95,9 +94,11 @@ namespace Chris.Graphics
             _settings.MotionBlur.Subscribe(SetMotionBlurEnabled).AddTo(ref d);
             _settings.Vignette.Subscribe(SetVignetteEnabled).AddTo(ref d);
             _settings.RenderScale.Subscribe(SetRenderScale).AddTo(ref d);
+            _settings.FrameRate.Subscribe(SetFrameRate).AddTo(ref d);
 #if ILLUSION_RP_INSTALL
             _settings.ContactShadows.Subscribe(SetContactShadowsEnabled).AddTo(ref d);
             _settings.ScreenSpaceReflection.Subscribe(SetScreenSpaceReflection).AddTo(ref d);
+            _settings.ScreenSpaceGlobalIllumination.Subscribe(SetScreenSpaceGlobalIllumination).AddTo(ref d);
             _settings.VolumetricFog.Subscribe(SetVolumetricFog).AddTo(ref d);
 #endif
             _graphicsModules = graphicsConfig.graphicsModules.Select(serializedType => serializedType.GetObject()).ToArray();
@@ -110,14 +111,12 @@ namespace Chris.Graphics
             }
         }
 
-        private void ApplyFrameRate()
+        private void SetFrameRate(int index)
         {
             if (!Application.isPlaying) return;
+            if (index >= graphicsConfig.frameRateOptions.Length) return;
             
-            if (graphicsConfig.targetFrameRate.Enabled)
-            {
-                Application.targetFrameRate = Mathf.Max(1, graphicsConfig.targetFrameRate.Value);
-            }
+            Application.targetFrameRate = graphicsConfig.frameRateOptions[index];
         }
 
         public void ApplyCameraSettings()
@@ -125,11 +124,11 @@ namespace Chris.Graphics
             var mainCamera = Camera.main;
             if (!mainCamera) return;
 
-            mainCamera.fieldOfView = graphicsConfig.cameraSettings.fieldOfView;
-            mainCamera.nearClipPlane = graphicsConfig.cameraSettings.nearClipPlane;
-            mainCamera.farClipPlane = graphicsConfig.cameraSettings.farClipPlane;
-            QualitySettings.streamingMipmapsActive = graphicsConfig.cameraSettings.enableTextureStreaming;
-            if (graphicsConfig.cameraSettings.perCameraStreaming)
+            mainCamera.fieldOfView = graphicsConfig.fieldOfView;
+            mainCamera.nearClipPlane = graphicsConfig.nearClipPlane;
+            mainCamera.farClipPlane = graphicsConfig.farClipPlane;
+            QualitySettings.streamingMipmapsActive = graphicsConfig.enableTextureStreaming;
+            if (graphicsConfig.perCameraStreaming)
             {
                 _ = mainCamera.gameObject.AddComponent<StreamingController>();
             }
@@ -285,6 +284,11 @@ namespace Chris.Graphics
         private static void SetScreenSpaceReflection(bool isEnabled)
         {
             IllusionRuntimeRenderingConfig.Get().EnableScreenSpaceReflection = isEnabled;
+        }
+        
+        private static void SetScreenSpaceGlobalIllumination(bool isEnabled)
+        {
+            IllusionRuntimeRenderingConfig.Get().EnableScreenSpaceGlobalIllumination = isEnabled;
         }
         
         private static void SetVolumetricFog(bool isEnabled)

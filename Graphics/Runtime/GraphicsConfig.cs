@@ -1,4 +1,3 @@
-using System;
 using Chris.Serialization;
 using UnityEngine;
 
@@ -7,26 +6,26 @@ namespace Chris.Graphics
     [CreateAssetMenu(fileName = "GraphicsConfig", menuName = "Chris/Graphics/GraphicsConfig")]
     public class GraphicsConfig : ScriptableObject
     {
-        [Serializable]
-        public class CameraSettings
-        {
-            public float fieldOfView = 23;
+        // Camera Settings
+        [Header("Camera Settings")]
+        public float fieldOfView = 23;
             
-            public float nearClipPlane = 0.1f;
+        public float nearClipPlane = 0.1f;
             
-            public float farClipPlane = 5000;
-
-            public bool enableTextureStreaming = true;
-            
-            public bool perCameraStreaming;
-        }
-
-        public SerializedType<GraphicsModule>[] graphicsModules;
+        public float farClipPlane = 5000;
 
         public bool enableDepthOfField = true;
 
-        public CameraSettings cameraSettings;
+        // Quality Settings
+        [Header("Quality Settings")]
+        public int[] frameRateOptions = { 30, 60 };
 
-        public Optional<int> targetFrameRate = new(60, false);
+        public bool enableTextureStreaming = true;
+            
+        public bool perCameraStreaming;
+
+        // Extra Settings
+        [Header("Extra Settings")]
+        public SerializedType<GraphicsModule>[] graphicsModules;
     }
 }

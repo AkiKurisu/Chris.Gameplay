@@ -10,6 +10,9 @@ namespace Chris.Graphics
     [ConfigPath("Chris.Graphics")]
     public class GraphicsSettings: Config<GraphicsSettings>
     {
+        [JsonConverter(typeof(ReactivePropertyConverter<int>))]
+        public ReactiveProperty<int> FrameRate { get; set; } = new(0);
+            
         [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
         public ReactiveProperty<bool> AmbientOcclusion { get; set; } = new(true);
         
@@ -52,6 +55,13 @@ namespace Chris.Graphics
         public ReactiveProperty<bool> ScreenSpaceReflection { get; set; } = new(true);
 #else
         public ReactiveProperty<bool> ScreenSpaceReflection { get; set; } = new(false);
+#endif
+            
+        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
+#if UNITY_STANDALONE_WIN
+        public ReactiveProperty<bool> ScreenSpaceGlobalIllumination { get; set; } = new(true);
+#else
+        public ReactiveProperty<bool> ScreenSpaceGlobalIllumination { get; set; } = new(false);
 #endif
             
         [JsonConverter(typeof(ReactivePropertyConverter<bool>))]

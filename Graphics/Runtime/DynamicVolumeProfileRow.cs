@@ -24,6 +24,7 @@ namespace Chris.Graphics
 #if ILLUSION_RP_INSTALL
         ScreenSpaceReflection,
         SubsurfaceScattering,
+        Shadows,
         ContactShadows,
         VolumetricFog
 #endif
