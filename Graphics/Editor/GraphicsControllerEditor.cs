@@ -19,15 +19,26 @@ namespace Chris.Graphics.Editor
         private static Type[] _cachedModuleTypes;
 
         private readonly Dictionary<string, bool> _status = new();
-        
+
+        private DynamicVolumePlatform _platform;
+        private int _qualityLevel;
+
         private void OnEnable()
         {
+#if UNITY_STANDALONE_WIN
+            _platform = DynamicVolumePlatform.Windows;
+#else
+            _platform = DynamicVolumePlatform.Mobile;
+#endif
             _target = (GraphicsController)target;
             _target.InitializeIfNeed();
             _graphicsConfigProperty = serializedObject.FindProperty("graphicsConfig");
 
             // Reload LookDev mode
             _lookDevMode = EditorPrefs.GetBool(GraphicsController.LookDevModeKey, false);
+
+            // Initialize quality level
+            _qualityLevel = QualitySettings.GetQualityLevel();
         }
 
         public override void OnInspectorGUI()
@@ -74,7 +85,7 @@ namespace Chris.Graphics.Editor
             if (GUILayout.Button(Styles.LookDevContent, buttonStyle, GUILayout.Width(140)))
             {
                 _lookDevMode = !_lookDevMode;
-                
+
                 EditorPrefs.SetBool(GraphicsController.LookDevModeKey, _lookDevMode);
 
                 ApplyLookDevSettings(_lookDevMode);
@@ -85,25 +96,41 @@ namespace Chris.Graphics.Editor
             GUI.contentColor = originalContentColor;
 
             EditorGUILayout.EndHorizontal();
-            
+
             EditorGUILayout.PropertyField(_graphicsConfigProperty);
-            
+
             using (new EditorGUI.DisabledScope(!_target.graphicsConfig))
             {
                 EditorGUILayout.BeginHorizontal();
-                if (GUILayout.Button("Reload", GUILayout.Height(20)))
+
+                EditorGUILayout.LabelField("Platform Profiles", GUILayout.Width(110));
+
+                var newPlatform = (DynamicVolumePlatform)EditorGUILayout.EnumPopup(_platform, GUILayout.Height(20));
+                if (newPlatform != _platform)
+                {
+                    _platform = newPlatform;
+                    _target.ApplyVolumeProfiles(_platform);
+                }
+
+                if (GUILayout.Button(EditorGUIUtility.IconContent("Refresh", "Reload"), GUILayout.Width(30),
+                        GUILayout.Height(18)))
                 {
                     _target.ApplyDynamicVolumeProfiles();
                 }
 
-                if (GUILayout.Button("Switch Windows", GUILayout.Height(20)))
-                {
-                    _target.ApplyVolumeProfiles(DynamicVolumePlatform.Windows);
-                }
+                EditorGUILayout.EndHorizontal();
 
-                if (GUILayout.Button("Switch Mobile", GUILayout.Height(20)))
+                // Quality Level selection
+                EditorGUILayout.BeginHorizontal();
+
+                EditorGUILayout.LabelField("Quality Level", GUILayout.Width(110));
+
+                var qualityNames = QualitySettings.names;
+                var newQualityLevel = EditorGUILayout.Popup(_qualityLevel, qualityNames, GUILayout.Height(20));
+                if (newQualityLevel != _qualityLevel)
                 {
-                    _target.ApplyVolumeProfiles(DynamicVolumePlatform.Mobile);
+                    _qualityLevel = newQualityLevel;
+                    QualitySettings.SetQualityLevel(_qualityLevel, true);
                 }
 
                 EditorGUILayout.EndHorizontal();
@@ -129,7 +156,7 @@ namespace Chris.Graphics.Editor
             foreach (DynamicVolumeType volumeType in volumeTypes)
             {
                 if (volumeType == DynamicVolumeType.DepthOfField && !_target.graphicsConfig.enableDepthOfField) continue;
-                
+
                 var volume = _target.GetVolume(volumeType);
                 if (volume)
                 {
@@ -210,7 +237,7 @@ namespace Chris.Graphics.Editor
                 DrawToggleSetting("Screen Space Global Illumination", settings.ScreenSpaceGlobalIllumination);
                 DrawToggleSetting("Volumetric Light", settings.VolumetricFog);
 #endif
-                
+
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("Enable All"))
                 {
@@ -221,7 +248,7 @@ namespace Chris.Graphics.Editor
                     SetAllEffects(false);
                 }
                 EditorGUILayout.EndHorizontal();
-                
+
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("Save Settings"))
                 {
@@ -289,7 +316,7 @@ namespace Chris.Graphics.Editor
                 }
             }
         }
-        
+
         private bool Foldout(string content)
         {
             bool status;
@@ -304,7 +331,7 @@ namespace Chris.Graphics.Editor
             }
             var color = GUI.backgroundColor;
             GUI.backgroundColor = Color.white;
-            
+
             var rect = GUILayoutUtility.GetRect(new GUIContent(content), Styles.FoldoutStyle);
             GUI.Box(rect, content, Styles.FoldoutStyle);
             GUI.backgroundColor = color;
@@ -326,7 +353,7 @@ namespace Chris.Graphics.Editor
 
             return status;
         }
-        
+
         private static class Styles
         {
             public static readonly GUIStyle FoldoutStyle = new("ShurikenModuleTitle")
@@ -336,7 +363,7 @@ namespace Chris.Graphics.Editor
                 fixedHeight = 22,
                 contentOffset = new Vector2(20f, -2f)
             };
-            
+
             public static readonly GUIContent LookDevContent = new(" Look Dev Mode", EditorGUIUtility.IconContent("d_SceneViewFX@2x").image);
         }
     }
