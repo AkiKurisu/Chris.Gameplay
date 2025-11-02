@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Chris.Graphics
+namespace Chris.Gameplay.Graphics
 {
     /// <summary>
     /// Implement for custom graphics module

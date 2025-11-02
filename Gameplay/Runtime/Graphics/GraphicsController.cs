@@ -11,7 +11,7 @@ using System.Linq;
 using Illusion.Rendering;
 #endif
 
-namespace Chris.Graphics
+namespace Chris.Gameplay.Graphics
 {
     /// <summary>
     /// Runtime graphics controller
@@ -179,13 +179,18 @@ namespace Chris.Graphics
             var manager = DynamicVolumeProfileTableManager.Get();
             foreach (var volumeType in (DynamicVolumeType[])Enum.GetValues(typeof(DynamicVolumeType)))
             {
-                ApplyVolumeProfile(GetVolume(volumeType), manager.GetProfile(volumeType, overridePlatform), manager.GetPriority(volumeType));
+                var volume = GetVolume(volumeType);
+                ApplyVolumeProfile(volume, manager.GetProfile(volumeType, overridePlatform), manager.GetPriority(volumeType));
 #if UNITY_EDITOR
                 if (lookDevMode && IsLookDevVolumeType(volumeType))
                 {
-                    GetVolume(volumeType).enabled = false;
+                    volume.enabled = false;
                 }
 #endif
+                if (!graphicsConfig.IsVolumeSupport(volumeType))
+                {
+                    volume.enabled = false;
+                }
             }
         }
         

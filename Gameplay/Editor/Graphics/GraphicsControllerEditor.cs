@@ -5,7 +5,7 @@ using UnityEditor;
 using UEditor = UnityEditor.Editor;
 using R3;
 
-namespace Chris.Graphics.Editor
+namespace Chris.Gameplay.Graphics.Editor
 {
     [CustomEditor(typeof(GraphicsController))]
     public class GraphicsControllerEditor : UEditor
@@ -21,6 +21,7 @@ namespace Chris.Graphics.Editor
         private readonly Dictionary<string, bool> _status = new();
 
         private DynamicVolumePlatform _platform;
+        
         private int _qualityLevel;
 
         private void OnEnable()

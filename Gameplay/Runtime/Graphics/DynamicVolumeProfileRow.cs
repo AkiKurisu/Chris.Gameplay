@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Chris.Graphics
+namespace Chris.Gameplay.Graphics
 {
     /// <summary>
     /// Define volume type that can can be altered dynamically
@@ -34,11 +34,12 @@ namespace Chris.Graphics
     public enum DynamicVolumePlatform
     {
         Windows,
-        Mobile
+        Mobile,
+        Console
     }
     
     [Serializable, AddressableDataTable(address: DynamicVolumeProfileTableManager.TableKey)]
-    public class DynamicVolumeProfileRow: IDataTableRow, IValidateRow
+    public class DynamicVolumeProfileRow: IDataTableRow
     {
         public DynamicVolumeType type;
         
@@ -47,6 +48,9 @@ namespace Chris.Graphics
         
         [AssetReferenceConstraint(group: "Volumes")]
         public SoftAssetReference<VolumeProfile> mobileProfile;
+                
+        [AssetReferenceConstraint(group: "Volumes")]
+        public SoftAssetReference<VolumeProfile> consoleProfile;
 
         [Tooltip("A value which determines which Volume is being used when Volumes have an equal amount of influence on the Scene. " +
                  "Volumes with a higher priority will override lower ones.")]
@@ -54,34 +58,43 @@ namespace Chris.Graphics
 
         public SoftAssetReference<VolumeProfile> GetVolumeProfile(DynamicVolumePlatform? overridePlatform = null)
         {
-#if UNITY_STANDALONE_WIN
-            bool useMobileProfile = false;
-#else
-            bool useMobileProfile = true;
-#endif
+            DynamicVolumePlatform platform;
+
             if (overridePlatform.HasValue)
             {
-                useMobileProfile = overridePlatform.Value == DynamicVolumePlatform.Mobile;
+                platform = overridePlatform.Value;
             }
-            
-            if (useMobileProfile)
+            else
             {
-                return mobileProfile;
+#if UNITY_ANDROID || UNITY_IOS
+                platform = DynamicVolumePlatform.Mobile;
+#elif UNITY_XBOXONE || UNITY_PS5
+                platform = DynamicVolumePlatform.Console;
+#else
+                platform = DynamicVolumePlatform.Windows;
+#endif
             }
 
-            return windowsProfile;
-        }
-
-        public bool ValidateRow(string rowId, out string reason)
-        {
-            if (type.ToString() == rowId)
+            SoftAssetReference<VolumeProfile> profileReference = windowsProfile;
+            switch (platform)
             {
-                reason = null;
-                return true;
+                case DynamicVolumePlatform.Windows:
+                    profileReference = windowsProfile;
+                    break;
+                case DynamicVolumePlatform.Mobile:
+                    profileReference = mobileProfile;
+                    break;
+                case DynamicVolumePlatform.Console:
+                    profileReference = consoleProfile;
+                    break;
             }
 
-            reason = $"row {rowId} should match with DynamicVolumeType {type}";
-            return false;
+            if (profileReference == null || string.IsNullOrEmpty(profileReference.Address))
+            {
+                profileReference = windowsProfile;
+            }
+
+            return profileReference;
         }
     }
     
@@ -105,10 +118,12 @@ namespace Chris.Graphics
                 foreach (var row in rows)
                 {
                     _profileRows[row.type] = row;
-#if UNITY_STANDALONE_WIN
-                    row.windowsProfile.LoadAsync().WaitForCompletion();
-#else
+#if UNITY_ANDROID || UNITY_IOS
                     row.mobileProfile.LoadAsync().WaitForCompletion();
+#elif UNITY_XBOXONE || UNITY_PS5
+                    row.consoleProfile.LoadAsync().WaitForCompletion();
+#else
+                    row.windowsProfile.LoadAsync().WaitForCompletion();
 #endif
                 }
                 return;
@@ -118,10 +133,12 @@ namespace Chris.Graphics
             foreach (var row in rows)
             {
                 _profileRows[row.type] = row;
-#if UNITY_STANDALONE_WIN
-                parallel.Add(row.windowsProfile.LoadAsync().ToUniTask());
-#else
+#if UNITY_ANDROID || UNITY_IOS
                 parallel.Add(row.mobileProfile.LoadAsync().ToUniTask());
+#elif UNITY_XBOXONE || UNITY_PS5
+                parallel.Add(row.consoleProfile.LoadAsync().ToUniTask());
+#else
+                parallel.Add(row.windowsProfile.LoadAsync().ToUniTask());
 #endif
             }
             await parallel;

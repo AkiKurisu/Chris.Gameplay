@@ -4,7 +4,7 @@ using R3.Chris;
 using Newtonsoft.Json;
 using R3;
 
-namespace Chris.Graphics
+namespace Chris.Gameplay.Graphics
 {
     [PreferJsonConvert]
     [ConfigPath("Chris.Graphics")]

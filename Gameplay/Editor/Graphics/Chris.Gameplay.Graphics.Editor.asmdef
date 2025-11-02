@@ -1,6 +1,6 @@
 {
-    "name": "Chris.Graphics.Editor",
-    "rootNamespace": "Chris.Graphics.Editor",
+    "name": "Chris.Gameplay.Graphics.Editor",
+    "rootNamespace": "Chris.Gameplay.Graphics.Editor",
     "references": [
         "GUID:df380645f10b7bc4b97d4f5eb6303d95",
         "GUID:e61a2a07ba2680848ad23eef5b7c024b",

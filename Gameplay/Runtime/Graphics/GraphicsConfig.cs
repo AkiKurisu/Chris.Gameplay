@@ -2,12 +2,12 @@ using System;
 using Chris.Serialization;
 using UnityEngine;
 
-namespace Chris.Graphics
+namespace Chris.Gameplay.Graphics
 {
     [Flags]
     public enum GraphicsFeatures
     {
-        None,
+        None = 0,
         ScreenSpaceReflection = 1 << 0,
         ScreenSpaceGlobalIllumination = 1 << 1,
         ScreenSpaceAmbientOcclusion = 1 << 2,
@@ -50,12 +50,12 @@ namespace Chris.Graphics
         {
             if (dynamicVolumeType == DynamicVolumeType.DepthOfField)
             {
-                return !disableFeatures.HasFlag(GraphicsFeatures.DepthOfField);
+                return !disableFeatures.HasFlag(GraphicsFeatures.DepthOfField) && Application.isPlaying;
             }
             
             if (dynamicVolumeType == DynamicVolumeType.MotionBlur)
             {
-                return !disableFeatures.HasFlag(GraphicsFeatures.MotionBlur);
+                return !disableFeatures.HasFlag(GraphicsFeatures.MotionBlur) && Application.isPlaying;
             }
             
             if (dynamicVolumeType == DynamicVolumeType.ScreenSpaceReflection)
