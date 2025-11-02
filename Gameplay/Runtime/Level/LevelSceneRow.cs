@@ -16,13 +16,13 @@ namespace Chris.Gameplay.Level
     public enum LoadLevelPolicy
     {
         Never = 0,
-        PC = 2,
-        Mobile = 4,
-        Console = 8
+        PC = 1 << 0,
+        Mobile = 1 << 1,
+        Console = 1 << 2
     }
     
     [Serializable, AddressableDataTable(address:LevelSceneDataTableManager.TableKey)]
-    public class LevelSceneRow : IDataTableRow
+    public class LevelSceneRow : IDataTableRow, IValidateRow
     {
         public string levelName;
         
@@ -46,6 +46,18 @@ namespace Chris.Gameplay.Level
             if (Application.isMobilePlatform) return loadPolicy.HasFlag(LoadLevelPolicy.Mobile);
             if (Application.isConsolePlatform) return loadPolicy.HasFlag(LoadLevelPolicy.Console);
             return loadPolicy.HasFlag(LoadLevelPolicy.PC);
+        }
+
+        public bool ValidateRow(string rowId, out string reason)
+        {
+            if (!string.IsNullOrEmpty(reference.Address))
+            {
+                reason = null;
+                return true;
+            }
+
+            reason = $"LevelSceneRow {rowId} missing a valid scene asset reference";
+            return false;
         }
     }
 }
