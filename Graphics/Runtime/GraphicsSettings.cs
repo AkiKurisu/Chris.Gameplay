@@ -12,9 +12,6 @@ namespace Chris.Graphics
     {
         [JsonConverter(typeof(ReactivePropertyConverter<int>))]
         public ReactiveProperty<int> FrameRate { get; set; } = new(0);
-            
-        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
-        public ReactiveProperty<bool> AmbientOcclusion { get; set; } = new(true);
         
         [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
         public ReactiveProperty<bool> Bloom { get; set; } = new(true);
@@ -42,13 +39,22 @@ namespace Chris.Graphics
         [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
         public ReactiveProperty<bool> Vignette { get; set; } = new(true);
         
-#if ILLUSION_RP_INSTALL
         [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
 #if UNITY_STANDALONE_WIN
         public ReactiveProperty<bool> ContactShadows { get; set; } = new(true);
 #else
         public ReactiveProperty<bool> ContactShadows { get; set; } = new(false);
 #endif
+            
+        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
+#if UNITY_STANDALONE_WIN
+        public ReactiveProperty<bool> PercentageCloserSoftShadows { get; set; } = new(true);
+#else
+        public ReactiveProperty<bool> PercentageCloserSoftShadows { get; set; } = new(false);
+#endif
+                        
+        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
+        public ReactiveProperty<bool> ScreenSpaceAmbientOcclusion { get; set; } = new(true);
             
         [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
 #if UNITY_STANDALONE_WIN
@@ -66,6 +72,5 @@ namespace Chris.Graphics
             
         [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
         public ReactiveProperty<bool> VolumetricFog { get; set; } = new(true);
-#endif
     }
 }

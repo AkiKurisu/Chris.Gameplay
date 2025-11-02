@@ -69,7 +69,6 @@ namespace Chris.Graphics
             if (graphicsConfig)
             {
                 ApplyDynamicVolumeProfiles();
-                SetDepthOfFieldEnabled(Application.isPlaying && graphicsConfig.enableDepthOfField);
             }
             
 #if UNITY_EDITOR
@@ -85,22 +84,37 @@ namespace Chris.Graphics
 
             // Bind properties
             var d = Disposable.CreateBuilder();
-            _settings.AmbientOcclusion.Subscribe(SetAmbientOcclusionEnabled).AddTo(ref d);
             _settings.Bloom.Subscribe(SetBloomEnabled).AddTo(ref d);
-            if (graphicsConfig.enableDepthOfField)
+            if (graphicsConfig.IsVolumeSupport(DynamicVolumeType.DepthOfField))
             {
                 _settings.DepthOfField.Subscribe(SetDepthOfFieldEnabled).AddTo(ref d);
             }
-            _settings.MotionBlur.Subscribe(SetMotionBlurEnabled).AddTo(ref d);
+            if (graphicsConfig.IsVolumeSupport(DynamicVolumeType.MotionBlur))
+            {
+                _settings.MotionBlur.Subscribe(SetMotionBlurEnabled).AddTo(ref d);
+            }
             _settings.Vignette.Subscribe(SetVignetteEnabled).AddTo(ref d);
             _settings.RenderScale.Subscribe(SetRenderScale).AddTo(ref d);
             _settings.FrameRate.Subscribe(SetFrameRate).AddTo(ref d);
+            
 #if ILLUSION_RP_INSTALL
             _settings.ContactShadows.Subscribe(SetContactShadowsEnabled).AddTo(ref d);
-            _settings.ScreenSpaceReflection.Subscribe(SetScreenSpaceReflection).AddTo(ref d);
-            _settings.ScreenSpaceGlobalIllumination.Subscribe(SetScreenSpaceGlobalIllumination).AddTo(ref d);
+            _settings.PercentageCloserSoftShadows.Subscribe(SetPercentageCloserSoftShadowsEnabled).AddTo(ref d);
+            if (graphicsConfig.IsVolumeSupport(DynamicVolumeType.ScreenSpaceAmbientOcclusion))
+            {
+                _settings.ScreenSpaceAmbientOcclusion.Subscribe(SetScreenSpaceAmbientOcclusionEnabled).AddTo(ref d);
+            }
+            if (graphicsConfig.IsVolumeSupport(DynamicVolumeType.ScreenSpaceReflection))
+            {
+                _settings.ScreenSpaceReflection.Subscribe(SetScreenSpaceReflection).AddTo(ref d);
+            }
+            if (graphicsConfig.IsVolumeSupport(DynamicVolumeType.ScreenSpaceGlobalIllumination))
+            {
+                _settings.ScreenSpaceGlobalIllumination.Subscribe(SetScreenSpaceGlobalIllumination).AddTo(ref d);
+            }
             _settings.VolumetricFog.Subscribe(SetVolumetricFog).AddTo(ref d);
 #endif
+            
             _graphicsModules = graphicsConfig.graphicsModules.Select(serializedType => serializedType.GetObject()).ToArray();
             d.Build().AddTo(this);
             
@@ -252,47 +266,63 @@ namespace Chris.Graphics
 
         private void SetDepthOfFieldEnabled(bool isEnabled)
         {
+            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.DepthOfField)) return;
             GetVolume(DynamicVolumeType.DepthOfField).weight = isEnabled ? 1f : 0f;
         }
         
         private void SetMotionBlurEnabled(bool isEnabled)
         {
+            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.MotionBlur)) return;
             GetVolume(DynamicVolumeType.MotionBlur).weight = isEnabled ? 1f : 0f;
-        }
-        
-        private void SetAmbientOcclusionEnabled(bool isEnabled)
-        {
-            GetVolume(DynamicVolumeType.AmbientOcclusion).weight = isEnabled ? 1f : 0f;
         }
         
         private void SetVignetteEnabled(bool isEnabled)
         {
+            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.Vignette)) return;
             GetVolume(DynamicVolumeType.Vignette).weight = isEnabled ? 1f : 0f;
         }
         
         private void SetBloomEnabled(bool isEnabled)
         {
+            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.Bloom)) return;
             GetVolume(DynamicVolumeType.Bloom).weight = isEnabled ? 1f : 0f;
         }
         
 #if ILLUSION_RP_INSTALL
-        private void SetContactShadowsEnabled(bool isEnabled)
+        // For IllusionRP features, we can disable them directly.
+        private void SetScreenSpaceAmbientOcclusionEnabled(bool isEnabled)
         {
-            GetVolume(DynamicVolumeType.ContactShadows).weight = isEnabled ? 1f : 0f;
+            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.ScreenSpaceAmbientOcclusion)) return;
+            IllusionRuntimeRenderingConfig.Get().EnableScreenSpaceAmbientOcclusion = isEnabled;
         }
         
-        private static void SetScreenSpaceReflection(bool isEnabled)
+        private void SetContactShadowsEnabled(bool isEnabled)
         {
+            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.ContactShadows)) return;
+            IllusionRuntimeRenderingConfig.Get().EnableContactShadows = isEnabled;
+        }
+        
+        private void SetPercentageCloserSoftShadowsEnabled(bool isEnabled)
+        {
+            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.PercentageCloserSoftShadows)) return;
+            IllusionRuntimeRenderingConfig.Get().EnablePercentageCloserSoftShadows = isEnabled;
+        }
+        
+        private void SetScreenSpaceReflection(bool isEnabled)
+        {
+            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.ScreenSpaceReflection)) return;
             IllusionRuntimeRenderingConfig.Get().EnableScreenSpaceReflection = isEnabled;
         }
         
-        private static void SetScreenSpaceGlobalIllumination(bool isEnabled)
+        private void SetScreenSpaceGlobalIllumination(bool isEnabled)
         {
+            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.ScreenSpaceGlobalIllumination)) return;
             IllusionRuntimeRenderingConfig.Get().EnableScreenSpaceGlobalIllumination = isEnabled;
         }
         
-        private static void SetVolumetricFog(bool isEnabled)
+        private void SetVolumetricFog(bool isEnabled)
         {
+            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.VolumetricFog)) return;
             IllusionRuntimeRenderingConfig.Get().EnableVolumetricFog = isEnabled;
         }
 #endif

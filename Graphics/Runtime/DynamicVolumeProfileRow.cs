@@ -14,20 +14,18 @@ namespace Chris.Graphics
     /// </summary>
     public enum DynamicVolumeType
     {
-        AmbientOcclusion,
         Bloom,
         DepthOfField,
         MotionBlur,
         Tonemapping,
         Vignette,
-        
-#if ILLUSION_RP_INSTALL
+        ScreenSpaceAmbientOcclusion,
         ScreenSpaceReflection,
+        ScreenSpaceGlobalIllumination,
         SubsurfaceScattering,
-        Shadows,
+        PercentageCloserSoftShadows,
         ContactShadows,
         VolumetricFog
-#endif
     }
 
     /// <summary>
@@ -82,7 +80,7 @@ namespace Chris.Graphics
                 return true;
             }
 
-            reason = $"row id should match with DynamicVolumeType {type}";
+            reason = $"row {rowId} should match with DynamicVolumeType {type}";
             return false;
         }
     }
@@ -131,12 +129,22 @@ namespace Chris.Graphics
 
         public VolumeProfile GetProfile(DynamicVolumeType volumeType, DynamicVolumePlatform? overridePlatform = null)
         {
-            return _profileRows[volumeType].GetVolumeProfile(overridePlatform).LoadAsync().Result;
+            if (_profileRows.TryGetValue(volumeType, out var row))
+            {
+                return row.GetVolumeProfile(overridePlatform).LoadAsync().Result;
+            }
+
+            return null;
         }
         
         public float GetPriority(DynamicVolumeType volumeType)
         {
-            return _profileRows[volumeType].priority;
+            if (_profileRows.TryGetValue(volumeType, out var row))
+            {
+                return row.priority;
+            }
+
+            return 0;
         }
     }
 }

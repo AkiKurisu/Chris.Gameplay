@@ -155,8 +155,6 @@ namespace Chris.Graphics.Editor
             var volumeTypes = Enum.GetValues(typeof(DynamicVolumeType));
             foreach (DynamicVolumeType volumeType in volumeTypes)
             {
-                if (volumeType == DynamicVolumeType.DepthOfField && !_target.graphicsConfig.enableDepthOfField) continue;
-
                 var volume = _target.GetVolume(volumeType);
                 if (volume)
                 {
@@ -166,9 +164,10 @@ namespace Chris.Graphics.Editor
                     // In LookDev mode, disable sliders and show current values
                     if (_lookDevMode)
                     {
-                        EditorGUI.BeginDisabledGroup(true);
-                        EditorGUILayout.Slider(volume.weight, 0f, 1f, GUILayout.Width(180));
-                        EditorGUI.EndDisabledGroup();
+                        using (new EditorGUI.DisabledScope(true))
+                        {
+                            EditorGUILayout.Slider(volume.weight, 0f, 1f, GUILayout.Width(180));
+                        }
 
                         // Show LookDev status for each volume
                         var isEnabled = volume.enabled;
@@ -182,19 +181,23 @@ namespace Chris.Graphics.Editor
                     }
                     else
                     {
-                        var newWeight = EditorGUILayout.Slider(volume.weight, 0f, 1f, GUILayout.Width(150));
-                        if (Mathf.Abs(newWeight - volume.weight) > 0.001f)
+                        using (new EditorGUI.DisabledScope(!_target.graphicsConfig.IsVolumeSupport(volumeType)))
                         {
-                            volume.weight = newWeight;
-                        }
+                            var newWeight = EditorGUILayout.Slider(volume.weight, 0f, 1f, GUILayout.Width(150));
+                            if (Mathf.Abs(newWeight - volume.weight) > 0.001f)
+                            {
+                                volume.weight = newWeight;
+                            }
 
-                        if (GUILayout.Button("0", GUILayout.Width(25)))
-                        {
-                            volume.weight = 0f;
-                        }
-                        if (GUILayout.Button("1", GUILayout.Width(25)))
-                        {
-                            volume.weight = 1f;
+                            if (GUILayout.Button("0", GUILayout.Width(25)))
+                            {
+                                volume.weight = 0f;
+                            }
+
+                            if (GUILayout.Button("1", GUILayout.Width(25)))
+                            {
+                                volume.weight = 1f;
+                            }
                         }
                     }
                     EditorGUILayout.EndHorizontal();
@@ -226,13 +229,14 @@ namespace Chris.Graphics.Editor
                 EditorGUILayout.EndHorizontal();
 
                 // Effects
-                DrawToggleSetting("Ambient Occlusion", settings.AmbientOcclusion);
                 DrawToggleSetting("Bloom", settings.Bloom);
                 DrawToggleSetting("Depth of Field", settings.DepthOfField);
                 DrawToggleSetting("Motion Blur", settings.MotionBlur);
                 DrawToggleSetting("Vignette", settings.Vignette);
 #if ILLUSION_RP_INSTALL
                 DrawToggleSetting("Contact Shadow", settings.ContactShadows);
+                DrawToggleSetting("Percentage Closer Soft Shadows", settings.PercentageCloserSoftShadows);
+                DrawToggleSetting("Screen Space Ambient Occlusion", settings.ScreenSpaceAmbientOcclusion);
                 DrawToggleSetting("Screen Space Reflection", settings.ScreenSpaceReflection);
                 DrawToggleSetting("Screen Space Global Illumination", settings.ScreenSpaceGlobalIllumination);
                 DrawToggleSetting("Volumetric Light", settings.VolumetricFog);
@@ -281,13 +285,14 @@ namespace Chris.Graphics.Editor
             if (!Application.isPlaying) return;
 
             var settings = GraphicsSettings.Get();
-            settings.AmbientOcclusion.Value = enabled;
+            settings.ScreenSpaceGlobalIllumination.Value = enabled;
             settings.Bloom.Value = enabled;
             settings.DepthOfField.Value = enabled;
             settings.MotionBlur.Value = enabled;
             settings.Vignette.Value = enabled;
 #if ILLUSION_RP_INSTALL
             settings.ContactShadows.Value = enabled;
+            settings.PercentageCloserSoftShadows.Value = enabled;
             settings.ScreenSpaceReflection.Value = enabled;
             settings.ScreenSpaceGlobalIllumination.Value = enabled;
             settings.VolumetricFog.Value = enabled;
