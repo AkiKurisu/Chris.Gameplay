@@ -1,5 +1,4 @@
-﻿using Chris.Configs.Editor;
-using Chris.Editor;
+﻿using Chris.Editor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -13,6 +12,7 @@ namespace Chris.Gameplay.Editor
         ForceText
     }
     
+    [BaseConfig]
     public class ChrisGameplaySettings : ConfigSingleton<ChrisGameplaySettings>
     {
         public bool enableRemoteUpdate;
@@ -24,11 +24,10 @@ namespace Chris.Gameplay.Editor
         internal static void SaveSettings()
         {
             Instance.Save(true);
-            var serializer = ConfigsEditorUtils.GetConfigSerializer();
             var config = GameplayConfig.Get();
             config.enableRemoteUpdate = Instance.enableRemoteUpdate;
             config.subsystemForceInitializeBeforeGet = Instance.subsystemForceInitializeBeforeGet;
-            config.Save(serializer);
+            Serialize(config);
         }
     }
 
@@ -69,8 +68,9 @@ namespace Chris.Gameplay.Editor
         
         private void DrawRemoteUpdateSettings()
         {
-            GUILayout.BeginVertical("Remote Update", GUI.skin.box);
-            GUILayout.Space(EditorGUIUtility.singleLineHeight);
+            var titleStyle = new GUIStyle(GUI.skin.label) { fontStyle = FontStyle.Bold };
+            GUILayout.Label("Remote Update", titleStyle);
+            GUILayout.BeginVertical(GUI.skin.box);
             EditorGUILayout.PropertyField(_settingsObject.FindProperty(nameof(ChrisGameplaySettings.enableRemoteUpdate)),
                 Styles.EnableRemoteUpdateLabel);
             EditorGUILayout.PropertyField(_settingsObject.FindProperty(nameof(ChrisGameplaySettings.remoteUpdateSerializeMode)),
@@ -84,8 +84,9 @@ namespace Chris.Gameplay.Editor
         
         private void DrawWorldSubsystemSettings()
         {
-            GUILayout.BeginVertical("World Subsystem", GUI.skin.box);
-            GUILayout.Space(EditorGUIUtility.singleLineHeight);
+            var titleStyle = new GUIStyle(GUI.skin.label) { fontStyle = FontStyle.Bold };
+            GUILayout.Label("World Subsystem", titleStyle);
+            GUILayout.BeginVertical(GUI.skin.box);
             EditorGUILayout.PropertyField(_settingsObject.FindProperty(nameof(ChrisGameplaySettings.subsystemForceInitializeBeforeGet)),
                 Styles.SubsystemForceInitializeBeforeGetLabel);
             if (_settingsObject.ApplyModifiedPropertiesWithoutUndo())

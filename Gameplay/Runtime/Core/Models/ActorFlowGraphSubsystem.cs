@@ -18,7 +18,10 @@ namespace Chris.Gameplay
         protected override void Initialize()
         {
             base.Initialize();
-            _serializer = new SaveLoadSerializer(Path.Combine(SaveUtility.SavePath, "Flow"), "json", TextSerializeFormatter.Instance);
+            _serializer = new SaveLoadSerializer(
+                Path.Combine(SaveUtility.SavePath, "Flow"), 
+                "json", 
+                TextSerializeFormatter.Instance);
         }
 
         public static ActorFlowGraphSubsystem Get()

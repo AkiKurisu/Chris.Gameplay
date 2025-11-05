@@ -28,7 +28,7 @@ namespace Chris.Gameplay.Graphics
 
         // Quality Settings
         [Header("Quality Settings")]
-        public int[] frameRateOptions = { 30, 60 };
+        public int[] frameRateOptions = { 30, 60, -1 };
 
         public bool enableTextureStreaming = true;
             
