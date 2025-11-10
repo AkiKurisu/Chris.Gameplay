@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using R3;
 using UnityEngine.Rendering.Universal;
-using Chris.Gameplay;
 using System.Linq;
 #if ILLUSION_RP_INSTALL
 using Illusion.Rendering;
