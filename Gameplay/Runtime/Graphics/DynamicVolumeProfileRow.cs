@@ -10,25 +10,6 @@ using UnityEngine.Rendering;
 namespace Chris.Gameplay.Graphics
 {
     /// <summary>
-    /// Define volume type that can can be altered dynamically
-    /// </summary>
-    public enum DynamicVolumeType
-    {
-        Bloom,
-        DepthOfField,
-        MotionBlur,
-        Tonemapping,
-        Vignette,
-        ScreenSpaceAmbientOcclusion,
-        ScreenSpaceReflection,
-        ScreenSpaceGlobalIllumination,
-        SubsurfaceScattering,
-        PercentageCloserSoftShadows,
-        ContactShadows,
-        VolumetricFog
-    }
-
-    /// <summary>
     /// Define platform options for Dynamic Volume
     /// </summary>
     public enum DynamicVolumePlatform
@@ -41,8 +22,6 @@ namespace Chris.Gameplay.Graphics
     [Serializable, AddressableDataTable(address: DynamicVolumeProfileTableManager.TableKey)]
     public class DynamicVolumeProfileRow: IDataTableRow
     {
-        public DynamicVolumeType type;
-        
         [AssetReferenceConstraint(group: "Volumes")]
         public SoftAssetReference<VolumeProfile> windowsProfile;
         
@@ -106,24 +85,25 @@ namespace Chris.Gameplay.Graphics
 
         public const string TableKey = "DynamicVolumeProfileTable";
 
-        private readonly Dictionary<DynamicVolumeType, DynamicVolumeProfileRow> _profileRows = new();
+        private readonly Dictionary<string, DynamicVolumeProfileRow> _profileRows = new();
         
         protected sealed override async UniTask Initialize(bool sync)
         {
             await InitializeSingleTable(TableKey, sync);
             var dt = GetDataTable(TableKey);
-            var rows = dt.GetAllRows<DynamicVolumeProfileRow>();
+            var rows = dt.GetRowMap();
             if (sync)
             {
                 foreach (var row in rows)
                 {
-                    _profileRows[row.type] = row;
+                    var profileRow = (DynamicVolumeProfileRow)row.Value;
+                    _profileRows[row.Key] = profileRow;
 #if UNITY_ANDROID || UNITY_IOS
-                    row.mobileProfile.LoadAsync().WaitForCompletion();
+                    profileRow.mobileProfile.LoadAsync().WaitForCompletion();
 #elif UNITY_XBOXONE || UNITY_PS5
-                    row.consoleProfile.LoadAsync().WaitForCompletion();
+                    profileRow.consoleProfile.LoadAsync().WaitForCompletion();
 #else
-                    row.windowsProfile.LoadAsync().WaitForCompletion();
+                    profileRow.windowsProfile.LoadAsync().WaitForCompletion();
 #endif
                 }
                 return;
@@ -132,19 +112,20 @@ namespace Chris.Gameplay.Graphics
             using var parallel = UniParallel.Get();
             foreach (var row in rows)
             {
-                _profileRows[row.type] = row;
+                var profileRow = (DynamicVolumeProfileRow)row.Value;
+                _profileRows[row.Key] = profileRow;
 #if UNITY_ANDROID || UNITY_IOS
-                parallel.Add(row.mobileProfile.LoadAsync().ToUniTask());
+                parallel.Add(profileRow.mobileProfile.LoadAsync().ToUniTask());
 #elif UNITY_XBOXONE || UNITY_PS5
-                parallel.Add(row.consoleProfile.LoadAsync().ToUniTask());
+                parallel.Add(profileRow.consoleProfile.LoadAsync().ToUniTask());
 #else
-                parallel.Add(row.windowsProfile.LoadAsync().ToUniTask());
+                parallel.Add(profileRow.windowsProfile.LoadAsync().ToUniTask());
 #endif
             }
             await parallel;
         }
-
-        public VolumeProfile GetProfile(DynamicVolumeType volumeType, DynamicVolumePlatform? overridePlatform = null)
+        
+        public VolumeProfile GetProfile(string volumeType, DynamicVolumePlatform? overridePlatform = null)
         {
             if (_profileRows.TryGetValue(volumeType, out var row))
             {
@@ -154,7 +135,7 @@ namespace Chris.Gameplay.Graphics
             return null;
         }
         
-        public float GetPriority(DynamicVolumeType volumeType)
+        public float GetPriority(string volumeType)
         {
             if (_profileRows.TryGetValue(volumeType, out var row))
             {

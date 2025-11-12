@@ -45,35 +45,5 @@ namespace Chris.Gameplay.Graphics
         {
             return (disableFeatures & features) == 0;
         }
-        
-        public bool IsVolumeSupport(DynamicVolumeType dynamicVolumeType)
-        {
-            if (dynamicVolumeType == DynamicVolumeType.DepthOfField)
-            {
-                return !disableFeatures.HasFlag(GraphicsFeatures.DepthOfField) && Application.isPlaying;
-            }
-            
-            if (dynamicVolumeType == DynamicVolumeType.MotionBlur)
-            {
-                return !disableFeatures.HasFlag(GraphicsFeatures.MotionBlur) && Application.isPlaying;
-            }
-            
-            if (dynamicVolumeType == DynamicVolumeType.ScreenSpaceReflection)
-            {
-                return !disableFeatures.HasFlag(GraphicsFeatures.ScreenSpaceReflection);
-            }
-            
-            if (dynamicVolumeType == DynamicVolumeType.ScreenSpaceGlobalIllumination)
-            {
-                return !disableFeatures.HasFlag(GraphicsFeatures.ScreenSpaceGlobalIllumination);
-            }
-            
-            if (dynamicVolumeType == DynamicVolumeType.ScreenSpaceAmbientOcclusion)
-            {
-                return !disableFeatures.HasFlag(GraphicsFeatures.ScreenSpaceAmbientOcclusion);
-            }
-
-            return true;
-        }
     }
 }

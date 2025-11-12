@@ -6,6 +6,7 @@ using UnityEngine.Rendering;
 using R3;
 using UnityEngine.Rendering.Universal;
 using System.Linq;
+using Ceres.Graph.Flow.Annotations;
 #if ILLUSION_RP_INSTALL
 using Illusion.Rendering;
 #endif
@@ -19,7 +20,26 @@ namespace Chris.Gameplay.Graphics
     [ExecuteInEditMode]
     public class GraphicsController : MonoBehaviour
     {
-        private readonly Dictionary<DynamicVolumeType, Volume> _volumes = new();
+        /// <summary>
+        /// Define built-in volume type that can can be altered dynamically
+        /// </summary>
+        private enum BuiltInVolumeType
+        {
+            Bloom,
+            DepthOfField,
+            MotionBlur,
+            Tonemapping,
+            Vignette,
+            ScreenSpaceAmbientOcclusion,
+            ScreenSpaceReflection,
+            ScreenSpaceGlobalIllumination,
+            SubsurfaceScattering,
+            PercentageCloserSoftShadows,
+            ContactShadows,
+            VolumetricFog
+        }
+        
+        private readonly Dictionary<string, Volume> _volumes = new();
 
         public GraphicsConfig graphicsConfig;
         
@@ -55,6 +75,23 @@ namespace Chris.Gameplay.Graphics
         {
             InitializeGraphics();
         }
+                
+        private void OnDestroy()
+        {
+#if UNITY_EDITOR
+            if (!gameObject.scene.IsValid()) return;
+            if (!Application.isPlaying) return;
+#endif
+            if (_graphicsModules != null)
+            {
+                foreach (var module in _graphicsModules)
+                {
+                    module?.Dispose();
+                }
+            }
+            _settings?.Save();
+            ContainerSubsystem.Get().Unregister(this);
+        }
 
         private void InitializeGraphics()
         {
@@ -83,35 +120,54 @@ namespace Chris.Gameplay.Graphics
 
             // Bind properties
             var d = Disposable.CreateBuilder();
-            _settings.Bloom.Subscribe(SetBloomEnabled).AddTo(ref d);
-            if (graphicsConfig.IsVolumeSupport(DynamicVolumeType.DepthOfField))
+            if (IsVolumeSupport(BuiltInVolumeType.Bloom))
             {
-                _settings.DepthOfField.Subscribe(SetDepthOfFieldEnabled).AddTo(ref d);
+                _settings.Bloom.Subscribe(new BuiltInVolumeObserver(BuiltInVolumeType.Bloom, this)).AddTo(ref d);
             }
-            if (graphicsConfig.IsVolumeSupport(DynamicVolumeType.MotionBlur))
+            
+            if (IsVolumeSupport(BuiltInVolumeType.DepthOfField))
             {
-                _settings.MotionBlur.Subscribe(SetMotionBlurEnabled).AddTo(ref d);
+                _settings.DepthOfField.Subscribe(new BuiltInVolumeObserver(BuiltInVolumeType.DepthOfField, this)).AddTo(ref d);
             }
-            _settings.Vignette.Subscribe(SetVignetteEnabled).AddTo(ref d);
+            
+            if (IsVolumeSupport(BuiltInVolumeType.MotionBlur))
+            {
+                _settings.MotionBlur.Subscribe(new BuiltInVolumeObserver(BuiltInVolumeType.MotionBlur, this)).AddTo(ref d);
+            }
+
+            if (IsVolumeSupport(BuiltInVolumeType.Vignette))
+            {
+                _settings.Vignette.Subscribe(new BuiltInVolumeObserver(BuiltInVolumeType.Vignette, this)).AddTo(ref d);
+            }
+
             _settings.RenderScale.Subscribe(SetRenderScale).AddTo(ref d);
             _settings.FrameRate.Subscribe(SetFrameRate).AddTo(ref d);
             
 #if ILLUSION_RP_INSTALL
-            _settings.ContactShadows.Subscribe(SetContactShadowsEnabled).AddTo(ref d);
-            _settings.PercentageCloserSoftShadows.Subscribe(SetPercentageCloserSoftShadowsEnabled).AddTo(ref d);
-            if (graphicsConfig.IsVolumeSupport(DynamicVolumeType.ScreenSpaceAmbientOcclusion))
+            if (IsVolumeSupport(BuiltInVolumeType.ContactShadows))
+            {
+                _settings.ContactShadows.Subscribe(SetContactShadowsEnabled).AddTo(ref d);
+            }
+            if (IsVolumeSupport(BuiltInVolumeType.PercentageCloserSoftShadows))
+            {
+                _settings.PercentageCloserSoftShadows.Subscribe(SetPercentageCloserSoftShadowsEnabled).AddTo(ref d);
+            }
+            if (IsVolumeSupport(BuiltInVolumeType.ScreenSpaceAmbientOcclusion))
             {
                 _settings.ScreenSpaceAmbientOcclusion.Subscribe(SetScreenSpaceAmbientOcclusionEnabled).AddTo(ref d);
             }
-            if (graphicsConfig.IsVolumeSupport(DynamicVolumeType.ScreenSpaceReflection))
+            if (IsVolumeSupport(BuiltInVolumeType.ScreenSpaceReflection))
             {
                 _settings.ScreenSpaceReflection.Subscribe(SetScreenSpaceReflection).AddTo(ref d);
             }
-            if (graphicsConfig.IsVolumeSupport(DynamicVolumeType.ScreenSpaceGlobalIllumination))
+            if (IsVolumeSupport(BuiltInVolumeType.ScreenSpaceGlobalIllumination))
             {
                 _settings.ScreenSpaceGlobalIllumination.Subscribe(SetScreenSpaceGlobalIllumination).AddTo(ref d);
             }
-            _settings.VolumetricFog.Subscribe(SetVolumetricFog).AddTo(ref d);
+            if (IsVolumeSupport(BuiltInVolumeType.VolumetricFog))
+            {
+                _settings.VolumetricFog.Subscribe(SetVolumetricFog).AddTo(ref d);
+            }
 #endif
             
             _graphicsModules = graphicsConfig.graphicsModules.Select(serializedType => serializedType.GetObject()).ToArray();
@@ -132,6 +188,10 @@ namespace Chris.Gameplay.Graphics
             Application.targetFrameRate = graphicsConfig.frameRateOptions[index];
         }
 
+        /// <summary>
+        /// Apply camera settings by current graphics config
+        /// </summary>
+        [ExecutableFunction]
         public void ApplyCameraSettings()
         {
             var mainCamera = Camera.main;
@@ -158,9 +218,10 @@ namespace Chris.Gameplay.Graphics
                 }
             }
 #endif
-            foreach (var volumeType in (DynamicVolumeType[])Enum.GetValues(typeof(DynamicVolumeType)))
+            var manager = DynamicVolumeProfileTableManager.Get();
+            foreach (var volumeType in manager.GetDataTable(DynamicVolumeProfileTableManager.TableKey).GetRowMap().Keys)
             {
-                var newObject = new GameObject(volumeType.ToString())
+                var newObject = new GameObject(volumeType)
                 {
                     hideFlags = HideFlags.HideAndDontSave
                 };
@@ -176,23 +237,33 @@ namespace Chris.Gameplay.Graphics
             bool lookDevMode = UnityEditor.EditorPrefs.GetBool(LookDevModeKey, false);
 #endif
             var manager = DynamicVolumeProfileTableManager.Get();
-            foreach (var volumeType in (DynamicVolumeType[])Enum.GetValues(typeof(DynamicVolumeType)))
+            foreach (var volumeType in manager.GetDataTable(DynamicVolumeProfileTableManager.TableKey).GetRowMap().Keys)
             {
                 var volume = GetVolume(volumeType);
                 ApplyVolumeProfile(volume, manager.GetProfile(volumeType, overridePlatform), manager.GetPriority(volumeType));
+
 #if UNITY_EDITOR
                 if (lookDevMode && IsLookDevVolumeType(volumeType))
                 {
                     volume.enabled = false;
+                    continue;
                 }
 #endif
-                if (!graphicsConfig.IsVolumeSupport(volumeType))
+
+                if (Enum.TryParse<BuiltInVolumeType>(volumeType, out var type) && !IsVolumeSupport(type)) 
                 {
                     volume.enabled = false;
+                    continue;
                 }
+                
+                volume.enabled = true;
             }
         }
         
+        /// <summary>
+        /// Apply dynamic volume profiles configuration and refresh volumes immediately.
+        /// </summary>
+        [ExecutableFunction]
         public void ApplyDynamicVolumeProfiles()
         {
             ApplyVolumeProfiles();
@@ -207,35 +278,16 @@ namespace Chris.Gameplay.Graphics
 
             volume.priority = priority;
         }
-        
-        public ScriptableRendererData GetUniversalScriptableRendererData()
-        {
-            return UniversalRenderingUtility.GetDefaultRendererData(_urpAsset);
-        }
 
-        internal static bool IsLookDevVolumeType(DynamicVolumeType volumeType)
+        internal static bool IsLookDevVolumeType(string volumeType)
         {
-#if ILLUSION_RP_INSTALL
-            if (volumeType == DynamicVolumeType.SubsurfaceScattering) return true;
-#endif
-            return volumeType == DynamicVolumeType.Tonemapping;
-        }
-        
-        private void OnDestroy()
-        {
-#if UNITY_EDITOR
-            if (!gameObject.scene.IsValid()) return;
-            if (!Application.isPlaying) return;
-#endif
-            if (_graphicsModules != null)
+            if (!Enum.TryParse<BuiltInVolumeType>(volumeType, out var type))
             {
-                foreach (var module in _graphicsModules)
-                {
-                    module?.Dispose();
-                }
+                return false;
             }
-            _settings?.Save();
-            ContainerSubsystem.Get().Unregister(this);
+            
+            if (type == BuiltInVolumeType.SubsurfaceScattering) return true;
+            return type == BuiltInVolumeType.Tonemapping;
         }
 
         private void SetRenderScale(int presetId /* Index + 1 */)
@@ -246,13 +298,14 @@ namespace Chris.Gameplay.Graphics
             }
         }
 
-        public Volume GetVolume(DynamicVolumeType dynamicVolumeType)
+        [ExecutableFunction]
+        public Volume GetVolume(string volumeId)
         {
             if (!_volumes.Any())
             {
                 PrepareDynamicVolumes();
             }
-            return _volumes[dynamicVolumeType];
+            return _volumes[volumeId];
         }
 
         [Conditional("UNITY_EDITOR")]
@@ -267,66 +320,94 @@ namespace Chris.Gameplay.Graphics
                 InitializeGraphics();
             }
         }
+        
+        private bool IsVolumeSupport(BuiltInVolumeType builtInBuiltInVolumeType)
+        {
+            if (builtInBuiltInVolumeType == BuiltInVolumeType.DepthOfField)
+            {
+                return graphicsConfig.IsFeatureSupport(GraphicsFeatures.DepthOfField) && Application.isPlaying;
+            }
+            
+            if (builtInBuiltInVolumeType == BuiltInVolumeType.MotionBlur)
+            {
+                return graphicsConfig.IsFeatureSupport(GraphicsFeatures.MotionBlur) && Application.isPlaying;
+            }
+            
+            if (builtInBuiltInVolumeType == BuiltInVolumeType.ScreenSpaceReflection)
+            {
+                return graphicsConfig.IsFeatureSupport(GraphicsFeatures.ScreenSpaceReflection);
+            }
+            
+            if (builtInBuiltInVolumeType == BuiltInVolumeType.ScreenSpaceGlobalIllumination)
+            {
+                return graphicsConfig.IsFeatureSupport(GraphicsFeatures.ScreenSpaceGlobalIllumination);
+            }
+            
+            if (builtInBuiltInVolumeType == BuiltInVolumeType.ScreenSpaceAmbientOcclusion)
+            {
+                return graphicsConfig.IsFeatureSupport(GraphicsFeatures.ScreenSpaceAmbientOcclusion);
+            }
 
-        private void SetDepthOfFieldEnabled(bool isEnabled)
-        {
-            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.DepthOfField)) return;
-            GetVolume(DynamicVolumeType.DepthOfField).weight = isEnabled ? 1f : 0f;
+            return true;
         }
         
-        private void SetMotionBlurEnabled(bool isEnabled)
+        private class BuiltInVolumeObserver : Observer<bool>
         {
-            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.MotionBlur)) return;
-            GetVolume(DynamicVolumeType.MotionBlur).weight = isEnabled ? 1f : 0f;
-        }
-        
-        private void SetVignetteEnabled(bool isEnabled)
-        {
-            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.Vignette)) return;
-            GetVolume(DynamicVolumeType.Vignette).weight = isEnabled ? 1f : 0f;
-        }
-        
-        private void SetBloomEnabled(bool isEnabled)
-        {
-            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.Bloom)) return;
-            GetVolume(DynamicVolumeType.Bloom).weight = isEnabled ? 1f : 0f;
+            private readonly string _volumeType;
+
+            private readonly GraphicsController _graphicsController;
+            
+            public BuiltInVolumeObserver(BuiltInVolumeType volumeType, GraphicsController graphicsController)
+            {
+                _volumeType = volumeType.ToString();
+                _graphicsController = graphicsController;
+            }
+
+            protected override void OnNextCore(bool value)
+            {
+                _graphicsController.GetVolume(_volumeType).weight = value ? 1 : 0;
+            }
+
+            protected override void OnErrorResumeCore(Exception error)
+            {
+                
+            }
+
+            protected override void OnCompletedCore(Result result)
+            {
+               
+            }
         }
         
 #if ILLUSION_RP_INSTALL
         // For IllusionRP features, we can disable them directly.
-        private void SetScreenSpaceAmbientOcclusionEnabled(bool isEnabled)
+        private static void SetScreenSpaceAmbientOcclusionEnabled(bool isEnabled)
         {
-            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.ScreenSpaceAmbientOcclusion)) return;
             IllusionRuntimeRenderingConfig.Get().EnableScreenSpaceAmbientOcclusion = isEnabled;
         }
         
-        private void SetContactShadowsEnabled(bool isEnabled)
+        private static void SetContactShadowsEnabled(bool isEnabled)
         {
-            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.ContactShadows)) return;
             IllusionRuntimeRenderingConfig.Get().EnableContactShadows = isEnabled;
         }
         
-        private void SetPercentageCloserSoftShadowsEnabled(bool isEnabled)
+        private static void SetPercentageCloserSoftShadowsEnabled(bool isEnabled)
         {
-            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.PercentageCloserSoftShadows)) return;
             IllusionRuntimeRenderingConfig.Get().EnablePercentageCloserSoftShadows = isEnabled;
         }
         
-        private void SetScreenSpaceReflection(bool isEnabled)
+        private static void SetScreenSpaceReflection(bool isEnabled)
         {
-            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.ScreenSpaceReflection)) return;
             IllusionRuntimeRenderingConfig.Get().EnableScreenSpaceReflection = isEnabled;
         }
         
-        private void SetScreenSpaceGlobalIllumination(bool isEnabled)
+        private static void SetScreenSpaceGlobalIllumination(bool isEnabled)
         {
-            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.ScreenSpaceGlobalIllumination)) return;
             IllusionRuntimeRenderingConfig.Get().EnableScreenSpaceGlobalIllumination = isEnabled;
         }
         
-        private void SetVolumetricFog(bool isEnabled)
+        private static void SetVolumetricFog(bool isEnabled)
         {
-            if (!graphicsConfig.IsVolumeSupport(DynamicVolumeType.VolumetricFog)) return;
             IllusionRuntimeRenderingConfig.Get().EnableVolumetricFog = isEnabled;
         }
 #endif
