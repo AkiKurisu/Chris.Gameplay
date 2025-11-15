@@ -1,7 +1,7 @@
 
 namespace UnityEngine
 {
-    public static class GameView
+    public static class GameViewUtils
     {
         public static Vector2 GetSizeOfMainGameView()
         {

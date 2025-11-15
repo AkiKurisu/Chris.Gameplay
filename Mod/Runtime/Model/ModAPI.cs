@@ -13,13 +13,13 @@ namespace Chris.Mod
     public static class ModAPI
     {
         public static ReactiveProperty<bool> IsModInit { get; } = new(false);
-        
+
         public static Subject<Unit> OnModRefresh { get; } = new();
-        
+
         private static readonly List<ModInfo> ModInfos = new();
-        
+
         private static ModConfig _config;
-        
+
         /// <summary>
         /// Initialize api and load all mods
         /// </summary>
@@ -34,7 +34,7 @@ namespace Chris.Mod
                 return;
             }
             Debug.Log("[Mod API] Initialize mod api...");
-            modLoader ??= new ModLoader(modConfig, new APIValidator(ImportConstants.APIVersion));
+            modLoader ??= new ModLoader(modConfig, new APIValidator(modConfig.ApiVersion));
             _config = modConfig;
             if (await modLoader.LoadAllModsAsync(ModInfos))
             {
@@ -42,7 +42,7 @@ namespace Chris.Mod
                 IsModInit.Value = true;
             }
         }
-        
+
         /// <summary>
         /// Delete mod on next launch
         /// </summary>
@@ -54,12 +54,12 @@ namespace Chris.Mod
                 Debug.LogError("[Mod API] Mod api is not initialized");
                 return;
             }
-            if (_config.GetModState(modInfo) == ModState.Delate) return;
+            if (_config.GetModState(modInfo) == ModState.Delete) return;
             _config.DeleteMod(modInfo);
             ModInfos.Remove(modInfo);
             OnModRefresh.OnNext(Unit.Default);
         }
-        
+
         /// <summary>
         /// Enable mod on next launch
         /// </summary>
@@ -76,7 +76,7 @@ namespace Chris.Mod
             _config.SetModEnabled(modInfo, isEnabled);
             OnModRefresh.OnNext(Unit.Default);
         }
-        
+
         /// <summary>
         /// Get mod state
         /// </summary>
@@ -91,7 +91,7 @@ namespace Chris.Mod
             }
             return _config.GetModState(modInfo);
         }
-        
+
         /// <summary>
         /// Get all enabled mod infos
         /// </summary>
@@ -105,7 +105,7 @@ namespace Chris.Mod
             }
             return ModInfos.ToList();
         }
-        
+
         /// <summary>
         /// Unzip all zip files from <see cref="path"/> 
         /// </summary>
@@ -120,7 +120,7 @@ namespace Chris.Mod
                 File.Delete(zip);
             }
         }
-        
+
         /// <summary>
         /// Delete mod files from disk, is not safe when is already initialized,
         /// recommend to use <see cref="DeleteMod"/> to delete mod on next launcher
@@ -130,7 +130,7 @@ namespace Chris.Mod
         {
             Directory.Delete(modInfo.FilePath, true);
         }
-        
+
         /// <summary>
         /// Load mod Addressables content catalog from path
         /// </summary>
@@ -154,7 +154,7 @@ namespace Chris.Mod
             File.WriteAllText(path, contentCatalog, Encoding.UTF8);
             return true;
         }
-        
+
         /// <summary>
         /// Load <see cref="ModInfo"/> from path
         /// </summary>

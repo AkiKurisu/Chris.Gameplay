@@ -13,13 +13,18 @@ namespace Chris.Mod
     {
         public string LoadingPath { get; set; } = ImportConstants.LoadingPath;
         
+        /// <summary>
+        /// API version for mod validation
+        /// </summary>
+        public string ApiVersion { get; set; } = ImportConstants.DefaultAPIVersion;
+        
         public List<ModStateInfo> stateInfos = new();
         
         public ModState GetModState(ModInfo modInfo)
         {
             if (TryGetStateInfo(modInfo, out var modStateInfo))
             {
-                if (modStateInfo.modState == ModState.Delate)
+                if (modStateInfo.modState == ModState.Delete)
                 {
                     stateInfos.Remove(modStateInfo);
                 }
@@ -50,7 +55,7 @@ namespace Chris.Mod
             if (TryGetStateInfo(modInfo, out var modStateInfo))
             {
                 if (force) stateInfos.Remove(modStateInfo);
-                else modStateInfo.modState = ModState.Delate;
+                else modStateInfo.modState = ModState.Delete;
             }
         }
         

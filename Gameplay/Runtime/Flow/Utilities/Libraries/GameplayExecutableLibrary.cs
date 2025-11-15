@@ -217,7 +217,7 @@ namespace Chris.Gameplay.Flow.Utilities
         [ExecutableFunction, CeresLabel("Capture Screenshot"), CeresGroup("Gameplay/Capture")]
         public static Texture2D Flow_CaptureScreenShotFromScreen()
         {
-            var screenSize = GameView.GetSizeOfMainGameView();
+            var screenSize = GameViewUtils.GetSizeOfMainGameView();
 #if UNITY_EDITOR
             return ScreenshotUtility.CaptureActiveRenderTexture((int)screenSize.x, (int)screenSize.y);
 #else
@@ -243,7 +243,7 @@ namespace Chris.Gameplay.Flow.Utilities
         public static void Flow_CaptureScreenshotAsync(Action<Texture2D> onComplete)
         {
             Assert.IsNotNull(onComplete);
-            var screenSize = GameView.GetSizeOfMainGameView();
+            var screenSize = GameViewUtils.GetSizeOfMainGameView();
 #if UNITY_EDITOR
             onComplete(ScreenshotUtility.CaptureActiveRenderTexture((int)screenSize.x, (int)screenSize.y));
 #else

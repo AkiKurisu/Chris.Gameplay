@@ -73,7 +73,7 @@ namespace Chris.Gameplay.Capture
             // Can modify settings here
             OnTakeScreenshotStart();
 
-            var screenSize = GameView.GetSizeOfMainGameView() * SuperSize;
+            var screenSize = GameViewUtils.GetSizeOfMainGameView() * SuperSize;
 
             // Capture
             if (ScreenshotMode == ScreenshotMode.Screen)

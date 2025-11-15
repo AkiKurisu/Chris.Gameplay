@@ -1,4 +1,5 @@
 using System;
+
 namespace Chris.Mod
 {
     /// <summary>
@@ -17,12 +18,14 @@ namespace Chris.Mod
         /// <summary>
         /// Mod waits to be deleted (will be deleted on next launch)
         /// </summary>
-        Delate
+        Delete
     }
+    
     [Serializable]
     public class ModStateInfo
     {
         public string modFullName;
+        
         public ModState modState;
     }
 }

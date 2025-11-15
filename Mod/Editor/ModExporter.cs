@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEditor;
 using UnityEngine;
 using System.IO;
@@ -85,7 +84,7 @@ namespace Chris.Mod.Editor
                 modName = _exportConfig.modName,
                 version = _exportConfig.version,
                 modIconBytes = _exportConfig.modIcon != null ? _exportConfig.modIcon.EncodeToPNG() : Array.Empty<byte>(),
-                apiVersion = ImportConstants.APIVersion.ToString(CultureInfo.InvariantCulture)
+                apiVersion = ModConfig.Get().ApiVersion
             };
             foreach (var builder in _builders)
             {

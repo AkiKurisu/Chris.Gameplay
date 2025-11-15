@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Cysharp.Threading.Tasks;
@@ -16,17 +17,21 @@ namespace Chris.Mod
     
     public class APIValidator : IModValidator
     {
-        private readonly float _apiVersion;
+        private readonly Version _apiVersion;
         
-        public APIValidator(float apiVersion)
+        public APIValidator(string apiVersion)
         {
-            this._apiVersion = apiVersion;
+            if (!Version.TryParse(apiVersion, out _apiVersion))
+            {
+                _apiVersion = new Version(0, 1, 0);
+            }
         }
+        
         public bool ValidateMod(ModInfo modInfo)
         {
-            if (float.TryParse(modInfo.apiVersion, out var version2))
+            if (Version.TryParse(modInfo.apiVersion, out var modVersion))
             {
-                return version2 >= _apiVersion;
+                return modVersion.CompareTo(_apiVersion) == 0;
             }
             return false;
         }

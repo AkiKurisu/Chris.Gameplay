@@ -62,7 +62,7 @@ namespace Chris.Gameplay.Capture
         
         private static void CaptureScreenshot(RenderTexture renderTarget)
         {
-            var screenSize = GameView.GetSizeOfMainGameView();
+            var screenSize = GameViewUtils.GetSizeOfMainGameView();
             RenderTexture cameraTarget = RenderTexture.GetTemporary((int)screenSize.x, (int)screenSize.y, 
                 0, RenderTextureFormat.ARGB32);
             ScreenCapture.CaptureScreenshotIntoRenderTexture(cameraTarget);

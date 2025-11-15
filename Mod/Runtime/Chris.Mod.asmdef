@@ -16,9 +16,7 @@
         "Newtonsoft.Json.dll"
     ],
     "autoReferenced": true,
-    "defineConstraints": [
-        "!UNITY_6000"
-    ],
+    "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false
 }

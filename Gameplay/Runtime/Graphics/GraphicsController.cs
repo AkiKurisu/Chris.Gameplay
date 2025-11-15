@@ -122,7 +122,10 @@ namespace Chris.Gameplay.Graphics
             var d = Disposable.CreateBuilder();
             if (IsVolumeSupport(BuiltInVolumeType.Bloom))
             {
+                // URP bloom
                 _settings.Bloom.Subscribe(new BuiltInVolumeObserver(BuiltInVolumeType.Bloom, this)).AddTo(ref d);
+                // Convolution bloom
+                _settings.Bloom.Subscribe(SetConvolutionBloomEnabled).AddTo(ref d);
             }
             
             if (IsVolumeSupport(BuiltInVolumeType.DepthOfField))
@@ -381,6 +384,11 @@ namespace Chris.Gameplay.Graphics
         
 #if ILLUSION_RP_INSTALL
         // For IllusionRP features, we can disable them directly.
+        private static void SetConvolutionBloomEnabled(bool isEnabled)
+        {
+            IllusionRuntimeRenderingConfig.Get().EnableConvolutionBloom = isEnabled;
+        }
+        
         private static void SetScreenSpaceAmbientOcclusionEnabled(bool isEnabled)
         {
             IllusionRuntimeRenderingConfig.Get().EnableScreenSpaceAmbientOcclusion = isEnabled;

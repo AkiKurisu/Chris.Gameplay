@@ -8,6 +8,7 @@ using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
+
 namespace Chris.Mod.Editor
 {
     public class PathBuilder : IModBuilder
@@ -74,14 +75,17 @@ namespace Chris.Mod.Editor
             AssetDatabase.SaveAssetIfDirty(AddressableAssetSettingsDefaultObject.Settings);
             {
                 var bundles = Directory.GetFiles(Addressables.BuildPath, "*.bundle", SearchOption.AllDirectories);
-                var bundleNames = bundles.Select(x => Path.GetFileName(x)).ToList();
-                //Copy default bundles to build path
+                var bundleNames = bundles.Select(Path.GetFileName).ToList();
+                // Copy default bundles to build path
                 foreach (string bundleFilePath in bundles)
                 {
                     string bundleFileName = Path.GetFileName(bundleFilePath);
                     string destinationFilePath = Path.Combine(exportConfig.lastExportPath, bundleFileName);
                     File.Copy(bundleFilePath, destinationFilePath, true);
                 }
+                
+                // TODO: Support binary catalog in Unity 6
+#if (!UNITY_6000_0_OR_NEWER || ENABLE_JSON_CATALOG)
                 var catalogPath = Directory.GetFiles(exportConfig.lastExportPath, "*.json")[0];
                 var catalog = JsonUtility.FromJson<ContentCatalogData>(File.ReadAllText(catalogPath));
                 for (int i = 0; i < catalog.InternalIds.Length; ++i)
@@ -98,10 +102,11 @@ namespace Chris.Mod.Editor
                 File.Delete(catalogPath);
                 string newCatalogPath = Path.Combine(exportConfig.lastExportPath, "catalog.json");
                 File.WriteAllText(newCatalogPath, JsonUtility.ToJson(catalog));
-                //Replace hash file
+                // Replace hash file
                 string hashPath = catalogPath.Replace(".json", ".hash");
                 File.Copy(hashPath, newCatalogPath.Replace(".json", ".hash"));
                 File.Delete(hashPath);
+#endif
             }
         }
         
