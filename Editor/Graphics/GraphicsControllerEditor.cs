@@ -25,14 +25,16 @@ namespace Chris.Gameplay.Graphics.Editor
 
         private void OnEnable()
         {
-#if UNITY_STANDALONE_WIN
-            _platform = DynamicVolumePlatform.Windows;
-#else
+#if UNITY_ANDROID || UNITY_IOS
             _platform = DynamicVolumePlatform.Mobile;
+#elif UNITY_XBOXONE || UNITY_PS5
+            _platform = DynamicVolumePlatform.Console;
+#else
+            _platform = DynamicVolumePlatform.Windows;
 #endif
             _target = (GraphicsController)target;
             _target.InitializeIfNeed();
-            _graphicsConfigProperty = serializedObject.FindProperty("graphicsConfig");
+            _graphicsConfigProperty = serializedObject.FindProperty(nameof(GraphicsController.settingsAsset));
 
             // Reload LookDev mode
             _lookDevMode = EditorPrefs.GetBool(GraphicsController.LookDevModeKey, false);
@@ -47,7 +49,7 @@ namespace Chris.Gameplay.Graphics.Editor
 
             DrawBasicConfig();
 
-            if (_target.graphicsSettingsAsset)
+            if (_target.settingsAsset)
             {
                 EditorGUILayout.Space();
 
@@ -102,7 +104,7 @@ namespace Chris.Gameplay.Graphics.Editor
 
             EditorGUILayout.PropertyField(_graphicsConfigProperty);
 
-            using (new EditorGUI.DisabledScope(!_target.graphicsSettingsAsset))
+            using (new EditorGUI.DisabledScope(!_target.settingsAsset))
             {
                 EditorGUILayout.BeginHorizontal();
 
