@@ -47,7 +47,7 @@ namespace Chris.Gameplay.Graphics.Editor
 
             DrawBasicConfig();
 
-            if (_target.graphicsConfig)
+            if (_target.graphicsSettingsAsset)
             {
                 EditorGUILayout.Space();
 
@@ -102,7 +102,7 @@ namespace Chris.Gameplay.Graphics.Editor
 
             EditorGUILayout.PropertyField(_graphicsConfigProperty);
 
-            using (new EditorGUI.DisabledScope(!_target.graphicsConfig))
+            using (new EditorGUI.DisabledScope(!_target.graphicsSettingsAsset))
             {
                 EditorGUILayout.BeginHorizontal();
 

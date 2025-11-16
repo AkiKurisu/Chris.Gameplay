@@ -7,6 +7,7 @@ using R3;
 using UnityEngine.Rendering.Universal;
 using System.Linq;
 using Ceres.Graph.Flow.Annotations;
+using UnityEngine.Serialization;
 #if ILLUSION_RP_INSTALL
 using Illusion.Rendering;
 #endif
@@ -41,11 +42,11 @@ namespace Chris.Gameplay.Graphics
         
         private readonly Dictionary<string, Volume> _volumes = new();
 
-        public GraphicsConfig graphicsConfig;
+        [FormerlySerializedAs("graphicsConfig")] public GraphicsSettingsAsset graphicsSettingsAsset;
         
         private GraphicsModule[] _graphicsModules;
         
-        private GraphicsSettings _settings;
+        private GraphicsConfig _config;
         
         private UniversalRenderPipelineAsset _urpAsset;
         
@@ -89,7 +90,7 @@ namespace Chris.Gameplay.Graphics
                     module?.Dispose();
                 }
             }
-            _settings?.Save();
+            _config?.Save();
             ContainerSubsystem.Get().Unregister(this);
         }
 
@@ -98,11 +99,11 @@ namespace Chris.Gameplay.Graphics
 #if UNITY_EDITOR
             if (!gameObject.scene.IsValid()) return;
 #endif
-            _settings = GraphicsSettings.Get();
+            _config = GraphicsConfig.Get();
             _urpAsset = (UniversalRenderPipelineAsset)QualitySettings.renderPipeline;
             
             // Apply dynamic volume if config is set
-            if (graphicsConfig)
+            if (graphicsSettingsAsset)
             {
                 ApplyDynamicVolumeProfiles();
             }
@@ -123,72 +124,72 @@ namespace Chris.Gameplay.Graphics
             if (IsVolumeSupport(BuiltInVolumeType.Bloom))
             {
                 // URP bloom
-                _settings.Bloom.Subscribe(new BuiltInVolumeObserver(BuiltInVolumeType.Bloom, this)).AddTo(ref d);
+                _config.Bloom.Subscribe(new BuiltInVolumeObserver(BuiltInVolumeType.Bloom, this)).AddTo(ref d);
                 // Convolution bloom
-                _settings.Bloom.Subscribe(SetConvolutionBloomEnabled).AddTo(ref d);
+                _config.Bloom.Subscribe(SetConvolutionBloomEnabled).AddTo(ref d);
             }
             
             if (IsVolumeSupport(BuiltInVolumeType.DepthOfField))
             {
-                _settings.DepthOfField.Subscribe(new BuiltInVolumeObserver(BuiltInVolumeType.DepthOfField, this)).AddTo(ref d);
+                _config.DepthOfField.Subscribe(new BuiltInVolumeObserver(BuiltInVolumeType.DepthOfField, this)).AddTo(ref d);
             }
             
             if (IsVolumeSupport(BuiltInVolumeType.MotionBlur))
             {
-                _settings.MotionBlur.Subscribe(new BuiltInVolumeObserver(BuiltInVolumeType.MotionBlur, this)).AddTo(ref d);
+                _config.MotionBlur.Subscribe(new BuiltInVolumeObserver(BuiltInVolumeType.MotionBlur, this)).AddTo(ref d);
             }
 
             if (IsVolumeSupport(BuiltInVolumeType.Vignette))
             {
-                _settings.Vignette.Subscribe(new BuiltInVolumeObserver(BuiltInVolumeType.Vignette, this)).AddTo(ref d);
+                _config.Vignette.Subscribe(new BuiltInVolumeObserver(BuiltInVolumeType.Vignette, this)).AddTo(ref d);
             }
 
-            _settings.RenderScale.Subscribe(SetRenderScale).AddTo(ref d);
-            _settings.FrameRate.Subscribe(SetFrameRate).AddTo(ref d);
+            _config.RenderScale.Subscribe(SetRenderScale).AddTo(ref d);
+            _config.FrameRate.Subscribe(SetFrameRate).AddTo(ref d);
             
 #if ILLUSION_RP_INSTALL
             if (IsVolumeSupport(BuiltInVolumeType.ContactShadows))
             {
-                _settings.ContactShadows.Subscribe(SetContactShadowsEnabled).AddTo(ref d);
+                _config.ContactShadows.Subscribe(SetContactShadowsEnabled).AddTo(ref d);
             }
             if (IsVolumeSupport(BuiltInVolumeType.PercentageCloserSoftShadows))
             {
-                _settings.PercentageCloserSoftShadows.Subscribe(SetPercentageCloserSoftShadowsEnabled).AddTo(ref d);
+                _config.PercentageCloserSoftShadows.Subscribe(SetPercentageCloserSoftShadowsEnabled).AddTo(ref d);
             }
             if (IsVolumeSupport(BuiltInVolumeType.ScreenSpaceAmbientOcclusion))
             {
-                _settings.ScreenSpaceAmbientOcclusion.Subscribe(SetScreenSpaceAmbientOcclusionEnabled).AddTo(ref d);
+                _config.ScreenSpaceAmbientOcclusion.Subscribe(SetScreenSpaceAmbientOcclusionEnabled).AddTo(ref d);
             }
             if (IsVolumeSupport(BuiltInVolumeType.ScreenSpaceReflection))
             {
-                _settings.ScreenSpaceReflection.Subscribe(SetScreenSpaceReflection).AddTo(ref d);
+                _config.ScreenSpaceReflection.Subscribe(SetScreenSpaceReflection).AddTo(ref d);
             }
             if (IsVolumeSupport(BuiltInVolumeType.ScreenSpaceGlobalIllumination))
             {
-                _settings.ScreenSpaceGlobalIllumination.Subscribe(SetScreenSpaceGlobalIllumination).AddTo(ref d);
+                _config.ScreenSpaceGlobalIllumination.Subscribe(SetScreenSpaceGlobalIllumination).AddTo(ref d);
             }
             if (IsVolumeSupport(BuiltInVolumeType.VolumetricFog))
             {
-                _settings.VolumetricFog.Subscribe(SetVolumetricFog).AddTo(ref d);
+                _config.VolumetricFog.Subscribe(SetVolumetricFog).AddTo(ref d);
             }
 #endif
             
-            _graphicsModules = graphicsConfig.graphicsModules.Select(serializedType => serializedType.GetObject()).ToArray();
+            _graphicsModules = graphicsSettingsAsset.graphicsModules.Select(serializedType => serializedType.GetObject()).ToArray();
             d.Build().AddTo(this);
             
             // Initialize sub-modules
             foreach (var module in _graphicsModules)
             {
-                module?.Initialize(this, _settings);
+                module?.Initialize(this, _config);
             }
         }
 
         private void SetFrameRate(int index)
         {
             if (!Application.isPlaying) return;
-            if (index >= graphicsConfig.frameRateOptions.Length) return;
+            if (index >= graphicsSettingsAsset.frameRateOptions.Length) return;
             
-            Application.targetFrameRate = graphicsConfig.frameRateOptions[index];
+            Application.targetFrameRate = graphicsSettingsAsset.frameRateOptions[index];
         }
 
         /// <summary>
@@ -200,11 +201,11 @@ namespace Chris.Gameplay.Graphics
             var mainCamera = Camera.main;
             if (!mainCamera) return;
 
-            mainCamera.fieldOfView = graphicsConfig.fieldOfView;
-            mainCamera.nearClipPlane = graphicsConfig.nearClipPlane;
-            mainCamera.farClipPlane = graphicsConfig.farClipPlane;
-            QualitySettings.streamingMipmapsActive = graphicsConfig.enableTextureStreaming;
-            if (graphicsConfig.perCameraStreaming)
+            mainCamera.fieldOfView = graphicsSettingsAsset.fieldOfView;
+            mainCamera.nearClipPlane = graphicsSettingsAsset.nearClipPlane;
+            mainCamera.farClipPlane = graphicsSettingsAsset.farClipPlane;
+            QualitySettings.streamingMipmapsActive = graphicsSettingsAsset.enableTextureStreaming;
+            if (graphicsSettingsAsset.perCameraStreaming)
             {
                 _ = mainCamera.gameObject.AddComponent<StreamingController>();
             }
@@ -295,9 +296,9 @@ namespace Chris.Gameplay.Graphics
 
         private void SetRenderScale(int presetId /* Index + 1 */)
         {
-            if (presetId >= 1 && presetId <= GraphicsSettings.RenderScalePresets.Length)
+            if (presetId >= 1 && presetId <= GraphicsConfig.RenderScalePresets.Length)
             {
-                _urpAsset.renderScale = GraphicsSettings.RenderScalePresets[presetId - 1];
+                _urpAsset.renderScale = GraphicsConfig.RenderScalePresets[presetId - 1];
             }
         }
 
@@ -328,27 +329,27 @@ namespace Chris.Gameplay.Graphics
         {
             if (builtInBuiltInVolumeType == BuiltInVolumeType.DepthOfField)
             {
-                return graphicsConfig.IsFeatureSupport(GraphicsFeatures.DepthOfField) && Application.isPlaying;
+                return graphicsSettingsAsset.IsFeatureSupport(GraphicsFeatures.DepthOfField) && Application.isPlaying;
             }
             
             if (builtInBuiltInVolumeType == BuiltInVolumeType.MotionBlur)
             {
-                return graphicsConfig.IsFeatureSupport(GraphicsFeatures.MotionBlur) && Application.isPlaying;
+                return graphicsSettingsAsset.IsFeatureSupport(GraphicsFeatures.MotionBlur) && Application.isPlaying;
             }
             
             if (builtInBuiltInVolumeType == BuiltInVolumeType.ScreenSpaceReflection)
             {
-                return graphicsConfig.IsFeatureSupport(GraphicsFeatures.ScreenSpaceReflection);
+                return graphicsSettingsAsset.IsFeatureSupport(GraphicsFeatures.ScreenSpaceReflection);
             }
             
             if (builtInBuiltInVolumeType == BuiltInVolumeType.ScreenSpaceGlobalIllumination)
             {
-                return graphicsConfig.IsFeatureSupport(GraphicsFeatures.ScreenSpaceGlobalIllumination);
+                return graphicsSettingsAsset.IsFeatureSupport(GraphicsFeatures.ScreenSpaceGlobalIllumination);
             }
             
             if (builtInBuiltInVolumeType == BuiltInVolumeType.ScreenSpaceAmbientOcclusion)
             {
-                return graphicsConfig.IsFeatureSupport(GraphicsFeatures.ScreenSpaceAmbientOcclusion);
+                return graphicsSettingsAsset.IsFeatureSupport(GraphicsFeatures.ScreenSpaceAmbientOcclusion);
             }
 
             return true;

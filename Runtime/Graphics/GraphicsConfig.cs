@@ -1,49 +1,76 @@
-using System;
+using Chris.Configs;
 using Chris.Serialization;
-using UnityEngine;
+using R3.Chris;
+using Newtonsoft.Json;
+using R3;
 
 namespace Chris.Gameplay.Graphics
 {
-    [Flags]
-    public enum GraphicsFeatures
+    [PreferJsonConvert]
+    [ConfigPath("Chris.Graphics")]
+    public class GraphicsConfig: Config<GraphicsConfig>
     {
-        None = 0,
-        ScreenSpaceReflection = 1 << 0,
-        ScreenSpaceGlobalIllumination = 1 << 1,
-        ScreenSpaceAmbientOcclusion = 1 << 2,
-        DepthOfField = 1 << 3,
-        MotionBlur = 1 << 4
-    }
-    
-    [CreateAssetMenu(fileName = "GraphicsConfig", menuName = "Chris/Graphics/GraphicsConfig")]
-    public class GraphicsConfig : ScriptableObject
-    {
-        // Camera Settings
-        [Header("Camera Settings")]
-        public float fieldOfView = 23;
+        [JsonConverter(typeof(ReactivePropertyConverter<int>))]
+        public ReactiveProperty<int> FrameRate { get; set; } = new(0);
+        
+        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
+        public ReactiveProperty<bool> Bloom { get; set; } = new(true);
+        
+        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
+#if UNITY_STANDALONE_WIN
+        public ReactiveProperty<bool> DepthOfField { get; set; } = new(true);
+#else
+        public ReactiveProperty<bool> DepthOfField { get; set; } = new(false);
+#endif
             
-        public float nearClipPlane = 0.1f;
+        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
+        public ReactiveProperty<bool> MotionBlur { get; set; } = new(false);
             
-        public float farClipPlane = 5000;
-
-        // Quality Settings
-        [Header("Quality Settings")]
-        public int[] frameRateOptions = { 30, 60, -1 };
-
-        public bool enableTextureStreaming = true;
+        [JsonConverter(typeof(ReactivePropertyConverter<int>))]
+#if UNITY_STANDALONE_WIN
+        public ReactiveProperty<int> RenderScale { get; set; } = new(4);
+#else
+        public ReactiveProperty<int> RenderScale { get; set; } = new(3);
+#endif
+        
+        [JsonIgnore]
+        public static readonly float[] RenderScalePresets = { 0.7f, 0.8f, 0.9f, 1.0f };
+        
+        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
+        public ReactiveProperty<bool> Vignette { get; set; } = new(true);
+        
+        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
+#if UNITY_STANDALONE_WIN
+        public ReactiveProperty<bool> ContactShadows { get; set; } = new(true);
+#else
+        public ReactiveProperty<bool> ContactShadows { get; set; } = new(false);
+#endif
             
-        public bool perCameraStreaming;
-
-        // Extra Settings
-        [Header("Extra Settings")]
-        public SerializedType<GraphicsModule>[] graphicsModules;
-
-        [SerializeField]
-        private GraphicsFeatures disableFeatures;
-
-        public bool IsFeatureSupport(GraphicsFeatures features)
-        {
-            return (disableFeatures & features) == 0;
-        }
+        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
+#if UNITY_STANDALONE_WIN
+        public ReactiveProperty<bool> PercentageCloserSoftShadows { get; set; } = new(true);
+#else
+        public ReactiveProperty<bool> PercentageCloserSoftShadows { get; set; } = new(false);
+#endif
+                        
+        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
+        public ReactiveProperty<bool> ScreenSpaceAmbientOcclusion { get; set; } = new(true);
+            
+        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
+#if UNITY_STANDALONE_WIN
+        public ReactiveProperty<bool> ScreenSpaceReflection { get; set; } = new(true);
+#else
+        public ReactiveProperty<bool> ScreenSpaceReflection { get; set; } = new(false);
+#endif
+            
+        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
+#if UNITY_STANDALONE_WIN
+        public ReactiveProperty<bool> ScreenSpaceGlobalIllumination { get; set; } = new(true);
+#else
+        public ReactiveProperty<bool> ScreenSpaceGlobalIllumination { get; set; } = new(false);
+#endif
+            
+        [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
+        public ReactiveProperty<bool> VolumetricFog { get; set; } = new(true);
     }
 }
