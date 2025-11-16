@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Chris.Mod
+namespace Chris.Gameplay.Mod
 {
     /// <summary>
     /// Class defines mod's information

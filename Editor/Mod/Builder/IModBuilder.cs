@@ -1,4 +1,4 @@
-namespace Chris.Mod.Editor
+namespace Chris.Gameplay.Mod.Editor
 {
     public interface IModBuilder
     {

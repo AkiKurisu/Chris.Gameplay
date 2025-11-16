@@ -7,7 +7,7 @@ using System.Linq;
 using UnityEditor.AddressableAssets.Settings;
 using Newtonsoft.Json;
 
-namespace Chris.Mod.Editor
+namespace Chris.Gameplay.Mod.Editor
 {
     /// <summary>
     /// Exporter for per <see cref="ModExportConfig"/>

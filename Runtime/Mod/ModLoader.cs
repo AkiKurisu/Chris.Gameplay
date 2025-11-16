@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Cysharp.Threading.Tasks;
 
-namespace Chris.Mod
+namespace Chris.Gameplay.Mod
 {
     public interface IModValidator
     {

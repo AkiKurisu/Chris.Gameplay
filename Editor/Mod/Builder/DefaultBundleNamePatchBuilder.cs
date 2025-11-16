@@ -1,7 +1,7 @@
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Build;
 
-namespace Chris.Mod.Editor
+namespace Chris.Gameplay.Mod.Editor
 {
     public class DefaultBundleNamePatchBuilder : CustomBuilder
     {

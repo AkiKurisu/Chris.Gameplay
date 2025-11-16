@@ -3,7 +3,7 @@ using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 
-namespace Chris.Mod.Editor
+namespace Chris.Gameplay.Mod.Editor
 {
     public class ExcludeDefaultBundleBuilder : CustomBuilder
     {

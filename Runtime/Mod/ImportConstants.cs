@@ -1,7 +1,7 @@
 using System.IO;
 using UnityEngine;
 
-namespace Chris.Mod
+namespace Chris.Gameplay.Mod
 {
     public static class ImportConstants
     {

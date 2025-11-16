@@ -1,6 +1,6 @@
 using System;
 
-namespace Chris.Mod
+namespace Chris.Gameplay.Mod
 {
     /// <summary>
     /// Status of installed mod

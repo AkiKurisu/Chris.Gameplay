@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.IO;
-namespace Chris.Mod.Editor
+namespace Chris.Gameplay.Mod.Editor
 {
     public class ExportConstants
     {

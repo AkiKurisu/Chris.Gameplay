@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Chris.Configs;
 
-namespace Chris.Mod
+namespace Chris.Gameplay.Mod
 {
     /// <summary>
     /// Configuration of mod importer

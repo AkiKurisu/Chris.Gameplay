@@ -3,7 +3,7 @@ using Chris.Serialization;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
-namespace Chris.Mod.Editor
+namespace Chris.Gameplay.Mod.Editor
 {
     /// <summary>
     /// Scriptable mod export configuration
