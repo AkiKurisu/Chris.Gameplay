@@ -14,6 +14,10 @@ namespace Chris.Gameplay.Mod.Editor
     /// </summary>
     public sealed class ModExporter
     {
+        private static readonly LazyDirectory ExportDirectory = new(Path.Combine(Path.GetDirectoryName(Application.dataPath)!, "Export"));
+        
+        public static string ExportPath => ExportDirectory.GetPath();
+        
         private readonly List<IModBuilder> _builders;
 
         private readonly ModExportConfig _exportConfig;
@@ -30,7 +34,7 @@ namespace Chris.Gameplay.Mod.Editor
         
         private static string CreateBuildPath(string modName)
         {
-            var targetPath = Path.Combine(ExportConstants.ExportPath, EditorUserBuildSettings.activeBuildTarget.ToString());
+            var targetPath = Path.Combine(ExportPath, EditorUserBuildSettings.activeBuildTarget.ToString());
             if (!Directory.Exists(targetPath)) Directory.CreateDirectory(targetPath);
             var buildPath = Path.Combine(targetPath, modName.Replace(" ", string.Empty));
             if (Directory.Exists(buildPath)) FileUtil.DeleteFileOrDirectory(buildPath);
@@ -114,6 +118,27 @@ namespace Chris.Gameplay.Mod.Editor
             foreach (var builder in _builders)
             {
                 builder.Cleanup(_exportConfig);
+            }
+        }
+
+        private class LazyDirectory
+        {
+            private readonly string _path;
+        
+            private bool _initialized;
+        
+            public LazyDirectory(string path)
+            {
+                _path = path;
+            }
+        
+            public string GetPath()
+            {
+                if (!_initialized) return _path;
+            
+                Directory.CreateDirectory(_path);
+                _initialized = true;
+                return _path;
             }
         }
     }

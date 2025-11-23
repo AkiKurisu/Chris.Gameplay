@@ -30,10 +30,6 @@ namespace Chris.Gameplay.Graphics
         [Header("Quality Settings")]
         public int[] frameRateOptions = { 30, 60, -1 };
 
-        public bool enableTextureStreaming = true;
-            
-        public bool perCameraStreaming;
-
         // Extra Settings
         [Header("Extra Settings")]
         public SerializedType<GraphicsModule>[] graphicsModules;

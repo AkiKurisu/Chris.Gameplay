@@ -9,9 +9,13 @@ namespace Chris.Gameplay.Mod
 {
     public class ModDownloader : IDisposable, IProgress<float>
     {
-        public Subject<float> OnProgress { get; }= new();
+        private readonly Subject<float> _onProgress = new();
 
-        public Subject<Result> OnComplete { get; } = new();
+        private readonly Subject<Result> _onComplete = new();
+
+        public Observable<float> OnProgress => _onProgress;
+
+        public Observable<Result> OnComplete => _onComplete;
 
         private readonly CancellationToken _cancellationToken;
         
@@ -20,7 +24,7 @@ namespace Chris.Gameplay.Mod
             _cancellationToken = cancellationToken;
         }
         
-        public async UniTask DownloadModAsync(string url, string downloadPath)
+        public async UniTask DownloadAsync(string url, string downloadPath)
         {
             Result result = new();
             using UnityWebRequest request = UnityWebRequest.Get(new Uri(url).AbsoluteUri);
@@ -32,22 +36,22 @@ namespace Chris.Gameplay.Mod
                 result.ErrorInfo = $"Can't unzip mod: {downloadPath}!";
                 File.Delete(downloadPath);
                 result.DownloadPath = downloadPath[..4];
-                OnComplete.OnNext(result);
+                _onComplete.OnNext(result);
                 return;
             }
             result.Succeed = true;
-            OnComplete.OnNext(result);
+            _onComplete.OnNext(result);
         }
         
         void IProgress<float>.Report(float value)
         {
-            OnProgress.OnNext(value);
+            _onProgress.OnNext(value);
         }
         
         public void Dispose()
         {
-            OnProgress.Dispose();
-            OnComplete.Dispose();
+            _onProgress.Dispose();
+            _onComplete.Dispose();
         }
         
         public struct Result

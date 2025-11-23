@@ -50,6 +50,10 @@ namespace Chris.Gameplay.Graphics
         private UniversalRenderPipelineAsset _urpAsset;
         
         internal const string LookDevModeKey = "Graphics.LookDevMode";
+                
+        private float _deltaTime;
+
+        private GUIStyle _style;
         
         /// <summary>
         /// Get world instance graphics controller if exist
@@ -62,6 +66,14 @@ namespace Chris.Gameplay.Graphics
 
         private void Awake()
         {
+            _style = new GUIStyle
+            {
+                fontSize = 32,
+                normal =
+                {
+                    textColor = Color.yellow
+                }
+            };
 #if UNITY_EDITOR
             if (!gameObject.scene.IsValid()) return;
 #endif
@@ -74,6 +86,16 @@ namespace Chris.Gameplay.Graphics
         private void Start()
         {
             InitializeGraphics();
+        }
+
+        private void Update()
+        {
+#if UNITY_EDITOR
+            if (!gameObject.scene.IsValid()) return;
+            if (!Application.isPlaying) return;
+#endif
+            const float smoothing = 0.9f;
+            _deltaTime = _deltaTime * smoothing + 1f / Time.unscaledDeltaTime * (1f - smoothing);
         }
                 
         private void OnDestroy()
@@ -91,6 +113,17 @@ namespace Chris.Gameplay.Graphics
             }
             _config?.Save();
             ContainerSubsystem.Get().Unregister(this);
+        }
+
+        private void OnGUI()
+        {
+#if UNITY_EDITOR
+            if (!gameObject.scene.IsValid()) return;
+            if (!Application.isPlaying) return;
+#endif
+            if (!GraphicsConfig.Get().DisplayFPS) return;
+            int fps = (int)_deltaTime;
+            GUI.Label(new Rect(20, 10, 200, 50), $"FPS {fps}", _style);
         }
 
         private void InitializeGraphics()
@@ -205,11 +238,6 @@ namespace Chris.Gameplay.Graphics
             mainCamera.fieldOfView = settingsAsset.fieldOfView;
             mainCamera.nearClipPlane = settingsAsset.nearClipPlane;
             mainCamera.farClipPlane = settingsAsset.farClipPlane;
-            QualitySettings.streamingMipmapsActive = settingsAsset.enableTextureStreaming;
-            if (settingsAsset.perCameraStreaming && !mainCamera.gameObject.TryGetComponent<StreamingController>(out _))
-            {
-                _ = mainCamera.gameObject.AddComponent<StreamingController>();
-            }
         }
 
         private void PrepareDynamicVolumes()
@@ -295,11 +323,11 @@ namespace Chris.Gameplay.Graphics
             return type == BuiltInVolumeType.Tonemapping;
         }
 
-        private void SetRenderScale(int presetId /* Index + 1 */)
+        private void SetRenderScale(int presetId)
         {
-            if (presetId >= 1 && presetId <= GraphicsConfig.RenderScalePresets.Length)
+            if (presetId >= 0 && presetId < GraphicsConfig.RenderScalePresets.Length)
             {
-                _urpAsset.renderScale = GraphicsConfig.RenderScalePresets[presetId - 1];
+                _urpAsset.renderScale = GraphicsConfig.RenderScalePresets[presetId];
             }
         }
 

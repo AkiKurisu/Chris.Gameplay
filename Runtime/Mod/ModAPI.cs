@@ -1,18 +1,38 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Reflection;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using R3;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+#if (UNITY_6000_0_OR_NEWER && !ENABLE_JSON_CATALOG)
 using UnityEngine.AddressableAssets.ResourceLocators;
+using UnityEngine.ResourceManagement.Util;
+#else
+using System.Text;
+#endif
 
 namespace Chris.Gameplay.Mod
 {
     public static class ModAPI
     {
+        internal const string DefaultAPIVersion = "0.1.0";
+
+        internal const string DynamicLoadPath = "{LOCAL_MOD_PATH}";
+
+        /// <summary>
+        /// Default mod loading directory path.
+        /// </summary>
+#if !UNITY_EDITOR && UNITY_ANDROID
+        public static readonly string LoadingPath = Path.Combine(Application.persistentDataPath, "Mods");
+#else
+        public static readonly string LoadingPath = Path.Combine(Path.GetDirectoryName(Application.dataPath)!, "Mods");
+#endif
+        
         private static readonly ReactiveProperty<bool> InitializedProperty = new(false);
 
         private static readonly Subject<Unit> RefreshSubject = new();
@@ -49,7 +69,15 @@ namespace Chris.Gameplay.Mod
             _config = modConfig;
             if (await modLoader.LoadAllModsAsync(ModInfos))
             {
-                _config.stateInfos.RemoveAll(x => ModInfos.All(y => y.FullName != x.modFullName));
+                for (int i = _config.States.Count - 1; i >= 0; i--)
+                {
+                    var state = _config.States[i];
+                    if (ModInfos.All(y => y.FullName != state.fullName))
+                    {
+                        Debug.LogWarning($"[Mod API] Missing mod {state.fullName}");
+                        _config.States.RemoveAt(i);
+                    }
+                }
                 InitializedProperty.Value = true;
             }
         }
@@ -65,7 +93,7 @@ namespace Chris.Gameplay.Mod
                 Debug.LogError("[Mod API] Mod api is not initialized");
                 return;
             }
-            if (_config.GetModState(modInfo) == ModState.Delete) return;
+            if (_config.GetModState(modInfo) == ModStatus.Delete) return;
             _config.DeleteMod(modInfo);
             ModInfos.Remove(modInfo);
             RefreshSubject.OnNext(Unit.Default);
@@ -83,7 +111,7 @@ namespace Chris.Gameplay.Mod
                 Debug.LogError("[Mod API] Mod api is not initialized");
                 return;
             }
-            if (_config.GetModState(modInfo) == (isEnabled ? ModState.Enabled : ModState.Disabled)) return;
+            if (_config.GetModState(modInfo) == (isEnabled ? ModStatus.Enabled : ModStatus.Disabled)) return;
             _config.SetModEnabled(modInfo, isEnabled);
             RefreshSubject.OnNext(Unit.Default);
         }
@@ -93,12 +121,12 @@ namespace Chris.Gameplay.Mod
         /// </summary>
         /// <param name="modInfo"></param>
         /// <returns></returns>
-        public static ModState GetModState(ModInfo modInfo)
+        public static ModStatus GetModState(ModInfo modInfo)
         {
             if (!InitializedProperty.Value)
             {
                 Debug.LogError("[Mod API] Mod api is not initialized");
-                return ModState.Disabled;
+                return ModStatus.Disabled;
             }
             return _config.GetModState(modInfo);
         }
@@ -112,7 +140,7 @@ namespace Chris.Gameplay.Mod
             if (!InitializedProperty.Value)
             {
                 Debug.LogError("[Mod API] Mod api is not initialized");
-                return new();
+                return new List<ModInfo>();
             }
             return ModInfos.ToList();
         }
@@ -142,6 +170,15 @@ namespace Chris.Gameplay.Mod
             Directory.Delete(modInfo.FilePath, true);
         }
 
+        private static string GetCatalogExtension()
+        {
+#if (UNITY_6000_0_OR_NEWER && !ENABLE_JSON_CATALOG)
+            return ".bin";
+#else
+            return ".json";
+#endif
+        }
+        
         /// <summary>
         /// Load mod Addressables content catalog from path
         /// </summary>
@@ -149,96 +186,48 @@ namespace Chris.Gameplay.Mod
         /// <returns></returns>
         public static async UniTask<bool> LoadModCatalogAsync(string path)
         {
-            if (Directory.Exists(path))
+            if (!Directory.Exists(path))
             {
-                // Check for both JSON and Binary catalog formats
-                string jsonPath = Path.Combine(path, "catalog.json");
-                string binPath = Path.Combine(path, "catalog.bin");
-
-                if (File.Exists(jsonPath))
-                {
-                    path = jsonPath;
-                }
-                else if (File.Exists(binPath))
-                {
-                    path = binPath;
-                }
-                else
-                {
-                    Debug.LogError($"[Mod API] No catalog file found in {path}");
-                    return false;
-                }
+                return false;
             }
-
-            if (!File.Exists(path))
+            
+            string catalogPath = Path.Combine(path, $"catalog{GetCatalogExtension()}");
+            if (File.Exists(catalogPath))
             {
+                path = catalogPath;
+            }
+            else
+            {
+                Debug.LogError($"[Mod API] No catalog file found in {path}");
                 return false;
             }
 
             path = path.Replace(@"\", "/");
             string actualPath = Path.GetDirectoryName(path)!.Replace(@"\", "/");
-            string extension = Path.GetExtension(path).ToLower();
 
-            if (extension == ".json")
+            try
             {
-                // JSON Catalog processing
-                string contentCatalog = await File.ReadAllTextAsync(path, Encoding.UTF8);
-                string modifiedCatalog = contentCatalog.Replace(ImportConstants.DynamicLoadPath, actualPath);
-                await File.WriteAllTextAsync(path, modifiedCatalog, Encoding.UTF8);
-                Debug.Log($"[Mod API] Load mod JSON content catalog {path}");
-                await Addressables.LoadContentCatalogAsync(path).ToUniTask();
-                await File.WriteAllTextAsync(path, contentCatalog, Encoding.UTF8);
+#if (UNITY_6000_0_OR_NEWER && !ENABLE_JSON_CATALOG)
+                await ProcessBinaryCatalog(path, actualPath);
+#else
+                await ProcessJsonCatalog(path, actualPath);
+#endif
+                return true;
             }
-            else if (extension == ".bin")
+            catch (Exception e)
             {
-                // Binary Catalog processing: Load, modify entries, re-serialize
-                string tempPath = path + ".tmp";
-
-                try
-                {
-                    var success = ModifyCatalogPaths(path, tempPath, actualPath);
-
-                    if (success)
-                    {
-                        Debug.Log($"[Mod API] Load mod Binary content catalog {tempPath}");
-                        await Addressables.LoadContentCatalogAsync(tempPath).ToUniTask();
-                        File.Delete(tempPath);
-                    }
-                    else
-                    {
-                        Debug.LogError($"[Mod API] Failed to modify binary catalog paths");
-                        return false;
-                    }
-                }
-                catch (System.Exception ex)
-                {
-                    Debug.LogError($"[Mod API] Error processing binary catalog: {ex.Message}");
-                    if (File.Exists(tempPath))
-                        File.Delete(tempPath);
-                    return false;
-                }
-            }
-            else
-            {
-                Debug.LogError($"[Mod API] Unsupported catalog format: {extension}");
+                Debug.LogError($"[Mod API] Unexpected error during process catalog {path}: {e.Message}");
                 return false;
             }
-
-            return true;
         }
 
-        /// <summary>
-        /// Modify catalog internal paths and save to a new file
-        /// </summary>
-        /// <param name="sourcePath">Source catalog path</param>
-        /// <param name="targetPath">Target catalog path</param>
-        /// <param name="newBasePath">New base path to replace DynamicLoadPath</param>
-        /// <returns>True if successful</returns>
-        private static bool ModifyCatalogPaths(string sourcePath, string targetPath, string newBasePath)
-        {
 #if (UNITY_6000_0_OR_NEWER && !ENABLE_JSON_CATALOG)
+        private static async Task ProcessBinaryCatalog(string path, string actualPath)
+        {
             // Load the binary catalog
-            var catalogData = ContentCatalogData.LoadFromFile(sourcePath, false);
+            var data = await File.ReadAllBytesAsync(path);
+            var reader = new BinaryStorageBuffer.Reader(data, 1024, 1024, new ContentCatalogData.Serializer().WithInternalIdResolvingDisabled());
+            var catalogData = reader.ReadObject<ContentCatalogData>(0, out _, false);
 
             // Create locator to access catalog data
             var locator = catalogData.CreateCustomLocator();
@@ -263,7 +252,7 @@ namespace Chris.Gameplay.Mod
             foreach (var kvp in pkToLoc)
             {
                 var loc = kvp.Value.Item1;
-                string modifiedInternalId = loc.InternalId.Replace(ImportConstants.DynamicLoadPath, newBasePath);
+                string modifiedInternalId = loc.InternalId.Replace(DynamicLoadPath, actualPath);
 
                 // Collect dependencies
                 List<object> deps = null;
@@ -287,26 +276,34 @@ namespace Chris.Gameplay.Mod
             }
 
             // Create new catalog with modified data
-            var newCatalog = new ContentCatalogData(modifiedEntries, catalogData.ProviderId)
+            var newCatalog = new ContentCatalogData(catalogData.ProviderId)
             {
                 BuildResultHash = catalogData.BuildResultHash,
                 InstanceProviderData = catalogData.InstanceProviderData,
                 SceneProviderData = catalogData.SceneProviderData,
                 ResourceProviderData = catalogData.ResourceProviderData
             };
-            newCatalog.SetData(modifiedEntries);
+            new ContentCatalogDataWrapper(newCatalog).SetData(modifiedEntries);
 
             // Serialize and save
-            var bytes = newCatalog.SerializeToByteArray();
-            File.WriteAllBytes(targetPath, bytes);
-
-            return true;
-#else
-            // For JSON catalogs, this method shouldn't be called
-            Debug.LogError("[Mod API] ModifyCatalogPaths should not be called for JSON catalogs");
-            return false;
-#endif
+            var wr = new BinaryStorageBuffer.Writer(0, new ContentCatalogData.Serializer());
+            wr.WriteObject(newCatalog, false);
+            await File.WriteAllBytesAsync(path, wr.SerializeToByteArray());
+            Debug.Log($"[Mod API] Load mod binary content catalog {path}");
+            await Addressables.LoadContentCatalogAsync(path).ToUniTask();
+            await File.WriteAllBytesAsync(path, data);
         }
+#else
+        private static async Task ProcessJsonCatalog(string path, string actualPath)
+        {
+            string contentCatalog = await File.ReadAllTextAsync(path, Encoding.UTF8);
+            string modifiedCatalog = contentCatalog.Replace(DynamicLoadPath, actualPath);
+            await File.WriteAllTextAsync(path, modifiedCatalog, Encoding.UTF8);
+            Debug.Log($"[Mod API] Load mod json content catalog {path}");
+            await Addressables.LoadContentCatalogAsync(path).ToUniTask();
+            await File.WriteAllTextAsync(path, contentCatalog, Encoding.UTF8);
+        }
+#endif
 
         /// <summary>
         /// Load <see cref="ModInfo"/> from path
@@ -319,6 +316,29 @@ namespace Chris.Gameplay.Mod
             modInfo.FilePath = Path.GetDirectoryName(modInfoPath)!.Replace(@"\", "/");
             return modInfo;
         }
+        
+#if (UNITY_6000_0_OR_NEWER && !ENABLE_JSON_CATALOG)
+        private readonly struct ContentCatalogDataWrapper
+        {
+            private static readonly FieldInfo EntriesFieldInfo;
 
+            private readonly ContentCatalogData _catalog;
+            
+            static ContentCatalogDataWrapper()
+            {
+                EntriesFieldInfo = typeof(ContentCatalogData).GetField("m_Entries", BindingFlags.Instance | BindingFlags.NonPublic);
+            }
+
+            public ContentCatalogDataWrapper(ContentCatalogData catalogData)
+            {
+                _catalog = catalogData;
+            }
+
+            public void SetData(IList<ContentCatalogDataEntry> entries)
+            {
+                EntriesFieldInfo.SetValue(_catalog, entries);
+            }
+        }
+#endif
     }
 }

@@ -28,9 +28,9 @@ namespace Chris.Gameplay.Graphics
             
         [JsonConverter(typeof(ReactivePropertyConverter<int>))]
 #if UNITY_STANDALONE_WIN
-        public ReactiveProperty<int> RenderScale { get; set; } = new(4);
-#else
         public ReactiveProperty<int> RenderScale { get; set; } = new(3);
+#else
+        public ReactiveProperty<int> RenderScale { get; set; } = new(2);
 #endif
         
         [JsonIgnore]
@@ -72,5 +72,9 @@ namespace Chris.Gameplay.Graphics
             
         [JsonConverter(typeof(ReactivePropertyConverter<bool>))]
         public ReactiveProperty<bool> VolumetricFog { get; set; } = new(true);
+        
+        [JsonProperty]
+        [ConfigVariable("r.fps")]
+        internal bool DisplayFPS { get; set; }
     }
 }

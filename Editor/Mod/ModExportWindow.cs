@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using UnityEngine;
 using UnityEditor;
 using System.Reflection;
@@ -5,6 +6,7 @@ using System.Linq;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
+using Debug = UnityEngine.Debug;
 
 namespace Chris.Gameplay.Mod.Editor
 {
@@ -89,7 +91,7 @@ namespace Chris.Gameplay.Mod.Editor
             if (GUILayout.Button("Export", GUILayout.MinWidth(100)))
             {
                 new ModExporter(_exportConfig).Export();
-                System.Diagnostics.Process.Start(ExportConstants.ExportPath);
+                Process.Start(ModExporter.ExportPath);
                 EditorUtility.SetDirty(_exportConfig);
                 AssetDatabase.SaveAssets();
             }
@@ -121,22 +123,6 @@ namespace Chris.Gameplay.Mod.Editor
         private void ShowExportEditor()
         {
             EditorGUILayout.HelpBox($"Export your Mod.\nCurrent Platform: {EditorUserBuildSettings.activeBuildTarget}", MessageType.Info);
-            if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.StandaloneWindows64)
-            {
-                if (GUILayout.Button("Switch To Android"))
-                {
-                    // Switch to android build.
-                    EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
-                }
-            }
-            else
-            {
-                if (GUILayout.Button("Switch To Windows"))
-                {
-                    // Switch to Windows standalone build.
-                    EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64);
-                }
-            }
             if (_exportConfig == null)
             {
                 _exportConfig = LoadExportConfig();
@@ -180,9 +166,9 @@ namespace Chris.Gameplay.Mod.Editor
             if (config == null)
             {
                 config = CreateInstance<ModExportConfig>();
-                string kSettingsPath = $"Assets/ModExportConfig.asset";
-                Debug.Log($"<color=#3aff48>Exporter</color>: Mod export config saved path: {kSettingsPath}");
-                AssetDatabase.CreateAsset(config, kSettingsPath);
+                string settingsPath = "Assets/ModExportConfig.asset";
+                Debug.Log($"<color=#3aff48>Exporter</color>: Mod export config saved to {settingsPath}");
+                AssetDatabase.CreateAsset(config, settingsPath);
                 AssetDatabase.SaveAssets();
             }
             return config;

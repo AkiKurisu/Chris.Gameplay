@@ -5,7 +5,7 @@ namespace Chris.Gameplay.Mod
     /// <summary>
     /// Status of installed mod
     /// </summary>
-    public enum ModState
+    public enum ModStatus
     {
         /// <summary>
         /// Mod is loaded
@@ -16,16 +16,16 @@ namespace Chris.Gameplay.Mod
         /// </summary>
         Disabled,
         /// <summary>
-        /// Mod waits to be deleted (will be deleted on next launch)
+        /// Mod pending to be deleted (will be deleted on next launch)
         /// </summary>
         Delete
     }
     
     [Serializable]
-    public class ModStateInfo
+    public class ModState
     {
-        public string modFullName;
+        public string fullName;
         
-        public ModState modState;
+        public ModStatus status;
     }
 }

@@ -10,7 +10,6 @@ namespace Chris.Gameplay.Mod
     [Serializable]
     public class ModInfo
     {
-        #region Serialized Field
         public string apiVersion;
         
         public string authorName;
@@ -24,7 +23,6 @@ namespace Chris.Gameplay.Mod
         public byte[] modIconBytes;
         
         public Dictionary<string, string> metaData = new();
-        #endregion
         
         [JsonIgnore]
         public string FilePath { get; set; }

@@ -1,81 +1,89 @@
-using System;
 using System.Collections.Generic;
 using Chris.Configs;
+using Chris.Serialization;
 
 namespace Chris.Gameplay.Mod
 {
     /// <summary>
     /// Configuration of mod importer
     /// </summary>
-    [Serializable]
     [ConfigPath("Chris.Mod")]
+    [PreferJsonConvert]
     public class ModConfig: Config<ModConfig>
     {
-        public string LoadingPath { get; set; } = ImportConstants.LoadingPath;
+        /// <summary>
+        /// Mod loading path
+        /// </summary>
+        public string LoadingPath { get; set; } = ModAPI.LoadingPath;
         
         /// <summary>
         /// API version for mod validation
         /// </summary>
-        public string ApiVersion { get; set; } = ImportConstants.DefaultAPIVersion;
+        public string ApiVersion { get; set; } = ModAPI.DefaultAPIVersion;
         
-        public List<ModStateInfo> stateInfos = new();
+        /// <summary>
+        /// All mod states
+        /// </summary>
+        public List<ModState> States { get; set; } = new();
         
-        public ModState GetModState(ModInfo modInfo)
+        public ModStatus GetModState(ModInfo modInfo)
         {
-            if (TryGetStateInfo(modInfo, out var modStateInfo))
+            if (TryGetModState(modInfo, out var modStateInfo))
             {
-                if (modStateInfo.modState == ModState.Delete)
+                if (modStateInfo.status == ModStatus.Delete)
                 {
-                    stateInfos.Remove(modStateInfo);
+                    States.Remove(modStateInfo);
                 }
-                return modStateInfo.modState;
+                return modStateInfo.status;
             }
-            stateInfos.Add(new ModStateInfo
+            States.Add(new ModState
             {
-                modFullName = modInfo.FullName,
-                modState = ModState.Enabled
+                fullName = modInfo.FullName,
+                status = ModStatus.Enabled
             });
-            return ModState.Enabled;
+            return ModStatus.Enabled;
         }
         
         public bool IsModActivated(ModInfo modInfo)
         {
-            if (TryGetStateInfo(modInfo, out var modStateInfo))
-                return modStateInfo.modState == ModState.Enabled;
-            stateInfos.Add(new ModStateInfo
+            if (TryGetModState(modInfo, out var modStateInfo))
+                return modStateInfo.status == ModStatus.Enabled;
+            States.Add(new ModState
             {
-                modFullName = modInfo.FullName,
-                modState = ModState.Enabled
+                fullName = modInfo.FullName,
+                status = ModStatus.Enabled
             });
             return true;
         }
         
         public void DeleteMod(ModInfo modInfo, bool force = false)
         {
-            if (TryGetStateInfo(modInfo, out var modStateInfo))
+            if (TryGetModState(modInfo, out var modStateInfo))
             {
-                if (force) stateInfos.Remove(modStateInfo);
-                else modStateInfo.modState = ModState.Delete;
+                if (force) States.Remove(modStateInfo);
+                else modStateInfo.status = ModStatus.Delete;
             }
         }
         
         public void SetModEnabled(ModInfo modInfo, bool isEnabled)
         {
-            if (TryGetStateInfo(modInfo, out var modStateInfo))
-                modStateInfo.modState = isEnabled ? ModState.Enabled : ModState.Disabled;
+            if (TryGetModState(modInfo, out var modStateInfo))
+            {
+                modStateInfo.status = isEnabled ? ModStatus.Enabled : ModStatus.Disabled;
+            }
         }
         
-        public bool TryGetStateInfo(ModInfo modInfo, out ModStateInfo modStateInfo)
+        public bool TryGetModState(ModInfo modInfo, out ModState modState)
         {
-            foreach (var stateInfo in stateInfos)
+            foreach (var stateInfo in States)
             {
-                if (stateInfo.modFullName == modInfo.FullName)
+                if (stateInfo.fullName == modInfo.FullName)
                 {
-                    modStateInfo = stateInfo;
+                    modState = stateInfo;
                     return true;
                 }
             }
-            modStateInfo = null;
+            modState = null;
             return false;
         }
     }

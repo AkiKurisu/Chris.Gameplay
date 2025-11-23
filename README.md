@@ -40,9 +40,7 @@ AI tools from AAA games research.
 
 ### [Mod](./Documentation~/Mod.md) 
 
-Mod workflow based on Addressables. 
-
-> Not compatiable to Unity 6 yet.
+Mod workflow based on Addressables.
 
 ## Wiki
 

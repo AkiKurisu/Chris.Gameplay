@@ -1,40 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using Cysharp.Threading.Tasks;
 
 namespace Chris.Gameplay.Mod
 {
-    public interface IModValidator
-    {
-        bool ValidateMod(ModInfo modInfo);
-    }
-    
     public interface IModLoader
     {
         UniTask<bool> LoadAllModsAsync(List<ModInfo> modInfos);
-    }
-    
-    public class APIValidator : IModValidator
-    {
-        private readonly Version _apiVersion;
-        
-        public APIValidator(string apiVersion)
-        {
-            if (!Version.TryParse(apiVersion, out _apiVersion))
-            {
-                _apiVersion = new Version(0, 1, 0);
-            }
-        }
-        
-        public bool ValidateMod(ModInfo modInfo)
-        {
-            if (Version.TryParse(modInfo.apiVersion, out var modVersion))
-            {
-                return modVersion.CompareTo(_apiVersion) == 0;
-            }
-            return false;
-        }
     }
     
     public class ModLoader : IModLoader
@@ -82,11 +54,11 @@ namespace Chris.Gameplay.Mod
             {
                 var modInfo = await ModAPI.LoadModInfo(configPaths[i]);
                 var state = _modConfigData.GetModState(modInfo);
-                if (state == ModState.Enabled)
+                if (state == ModStatus.Enabled)
                 {
                     modInfos.Add(modInfo);
                 }
-                else if (state == ModState.Disabled)
+                else if (state == ModStatus.Disabled)
                 {
                     directoryPaths.RemoveAt(i);
                     modInfos.Add(modInfo);
@@ -112,14 +84,14 @@ namespace Chris.Gameplay.Mod
             string config = configs[0];
             var modInfo = await ModAPI.LoadModInfo(config);
             var state = configData.GetModState(modInfo);
-            if (state == ModState.Enabled)
+            if (state == ModStatus.Enabled)
             {
                 if (!_validator.ValidateMod(modInfo))
                 {
                     return modInfo;
                 }
             }
-            else if (state == ModState.Disabled)
+            else if (state == ModStatus.Disabled)
             {
                 return modInfo;
             }

@@ -5,10 +5,14 @@ using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
-using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
+#if (UNITY_6000_0_OR_NEWER && !ENABLE_JSON_CATALOG)
 using UnityEngine.ResourceManagement.ResourceLocations;
+using UnityEngine.ResourceManagement.Util;
+#else
+using UnityEngine;
+#endif
 
 namespace Chris.Gameplay.Mod.Editor
 {
@@ -45,7 +49,7 @@ namespace Chris.Gameplay.Mod.Editor
             }
             {
                 var settings = exportConfig.Group.Settings;
-                settings.profileSettings.SetValue(settings.activeProfileId, "Remote.LoadPath", ImportConstants.DynamicLoadPath);
+                settings.profileSettings.SetValue(settings.activeProfileId, "Remote.LoadPath", ModAPI.DynamicLoadPath);
                 settings.profileSettings.SetValue(settings.activeProfileId, "Remote.BuildPath", buildPath);
             }
         }
@@ -96,7 +100,7 @@ namespace Chris.Gameplay.Mod.Editor
                     {
                         if (catalog.InternalIds[i].Contains(bundleName))
                         {
-                            catalog.InternalIds[i] = $"{ImportConstants.DynamicLoadPath}/{bundleName}";
+                            catalog.InternalIds[i] = $"{ModAPI.DynamicLoadPath}/{bundleName}";
                             break;
                         }
                     }
@@ -111,7 +115,11 @@ namespace Chris.Gameplay.Mod.Editor
 #else
                 // Binary Catalog processing for Unity 6 (without JSON enabled)
                 var catalogPath = Directory.GetFiles(exportConfig.lastExportPath, "*.bin")[0];
-                var catalogData = ContentCatalogData.LoadFromFile(catalogPath, false);
+                
+                // Load the binary catalog
+                var data = File.ReadAllBytes(catalogPath);
+                var reader = new BinaryStorageBuffer.Reader(data, 1024, 1024, new ContentCatalogData.Serializer().WithInternalIdResolvingDisabled());
+                var catalogData = reader.ReadObject<ContentCatalogData>(0, out _, false);
                 
                 // Create locator to access binary catalog data
                 var locator = catalogData.CreateCustomLocator();
@@ -143,7 +151,7 @@ namespace Chris.Gameplay.Mod.Editor
                     {
                         if (loc.InternalId.Contains(bundleName))
                         {
-                            modifiedInternalId = $"{ImportConstants.DynamicLoadPath}/{bundleName}";
+                            modifiedInternalId = $"{ModAPI.DynamicLoadPath}/{bundleName}";
                             break;
                         }
                     }
