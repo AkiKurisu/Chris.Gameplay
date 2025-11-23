@@ -1,7 +1,7 @@
 {
   "name": "com.kurisu.chris.gameplay",
   "displayName": "Chris Gameplay",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "unity": "2022.3",
   "description": "Gameplay modules for Chris framework.",
   "keywords": [
@@ -22,7 +22,7 @@
   "changelogUrl": "https://github.com/AkiKurisu/Chris.Gameplay/releases",
   "licensesUrl": "https://github.com/AkiKurisu/Chris.Gameplay/blob/master/LICENSE",
   "dependencies": {
-    "com.kurisu.chris": "1.5.0",
-    "com.kurisu.ceres": "0.5.3"
+    "com.kurisu.chris": "1.5.1",
+    "com.kurisu.ceres": "0.6.1"
   }
 }

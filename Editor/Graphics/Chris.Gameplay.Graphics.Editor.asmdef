@@ -1,0 +1,34 @@
+{
+    "name": "Chris.Gameplay.Graphics.Editor",
+    "rootNamespace": "Chris.Gameplay.Graphics.Editor",
+    "references": [
+        "GUID:df380645f10b7bc4b97d4f5eb6303d95",
+        "GUID:e61a2a07ba2680848ad23eef5b7c024b",
+        "GUID:e6234d6c1f7bf4e4db20eddc411c00b8",
+        "GUID:daf055890401d9849a0b653a770933b5"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "URP_INSTALL"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "14.0.9",
+            "define": "URP_INSTALL"
+        },
+        {
+            "name": "com.kurisu.illusion-render-pipelines",
+            "expression": "1.0.0",
+            "define": "ILLUSION_RP_INSTALL"
+        }
+    ],
+    "noEngineReferences": false
+}

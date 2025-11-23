@@ -4,6 +4,8 @@
 
 Gameplay modules for [Chris](https://github.com/AkiKurisu/Chris) framework.
 
+> Experimental modules for personal project. It will be merged into Chris's repo once the modules are stable.
+
 </div>
 
 ## Install
@@ -13,25 +15,20 @@ Add following dependencies to `manifest.json`.
 ```json
   "dependencies": {
     "com.kurisu.chris": "https://github.com/AkiKurisu/Chris.git",
-    "com.kurisu.ceres": "https://github.com/AkiKurisu/Ceres.git",
-    "com.cysharp.unitask":"https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask"
+    "com.kurisu.ceres": "https://github.com/AkiKurisu/Ceres.git"
   }
-
 ```
 
 Use git URL to download package by Unity Package Manager ```https://github.com/AkiKurisu/Chris.Gameplay.git```.
 
-## Gameplay
+## Features
 
-### [Document](./Documentation~/Gameplay.md)
+### [Gameplay](./Documentation~/Gameplay.md)
 
 Actor based gameplay architecture like Unreal, integrate Ceres to support visual scripting.
 
 ![Visual Scripting](./Documentation~/Images/visual_scripting.png)
 
-## Experimental
-
-Experimental modules need additional dependencies and are not stable.
 
 ### [AI](./Documentation~/AI.md)
 
@@ -42,7 +39,8 @@ AI tools from AAA games research.
 > Field View from "Naughty Dog: Human Enemy AI In Last of The Us"
 
 ### [Mod](./Documentation~/Mod.md) 
-Mod workflow based on Addressables. 
+
+Mod workflow based on Addressables.
 
 ## Wiki
 

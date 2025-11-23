@@ -8,21 +8,17 @@ Efficient mod workflow based on Addressables.
 
 ## Version
 
-Unity 2022.3
-
-> TODO: Support Unity 6
+Unity 2022.3 or later, support Unity 6.
 
 ## Runtime API
 
 ```C#
-// Only support async way using UniTask
-private async UniTaskVoid LoadMod()
+private void Start()
 {
-    // Setting defines mod's on and off
-    ModSetting setting = new();
-    await ModAPI.Initialize(setting, new ModImporter(setting));
+    ModAPI.Initialize(ModConfig.Get()).Forget();
 }
 ```
+
 ## Editor Export
 
 Use `Mod Exporter` to create new addressable group and build only the mod group you edited.
