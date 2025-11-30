@@ -331,6 +331,11 @@ namespace Chris.Gameplay.Graphics
             }
         }
 
+        /// <summary>
+        /// Get Volume by id
+        /// </summary>
+        /// <param name="volumeId"></param>
+        /// <returns></returns>
         [ExecutableFunction]
         public Volume GetVolume(string volumeId)
         {
