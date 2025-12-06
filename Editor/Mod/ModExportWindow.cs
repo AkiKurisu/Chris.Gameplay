@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
+using UnityEditor.Callbacks;
 using Debug = UnityEngine.Debug;
 using UEditor = UnityEditor.Editor;
 
@@ -27,18 +28,30 @@ namespace Chris.Gameplay.Mod.Editor
         public static void OpenEditor()
         {
             var window = GetWindow<ModExportWindow>("Mod Exporter");
-            window.minSize = new Vector2(700, 800);
+            window.minSize = new Vector2(600, 720);
         }
 
         public static void OpenWithConfig(ModExportConfig config)
         {
             var window = GetWindow<ModExportWindow>("Mod Exporter");
-            window.minSize = new Vector2(700, 800);
+            window.minSize = new Vector2(600, 720);
             window._exportConfig = config;
             EditorPrefs.SetString(ConfigGuidKey, GetGuid(config));
             CreateCachedEditor(config, ref window._configEditor);
             window.Repaint();
         }
+        
+#pragma warning disable IDE0051
+        [OnOpenAsset(-1000)]
+        private static bool OnOpenAsset(int instanceId, int _)
+        {
+            var asset = EditorUtility.InstanceIDToObject(instanceId);
+            if (asset is not ModExportConfig config) return false;
+
+            OpenWithConfig(config);
+            return true;
+        }
+#pragma warning restore IDE0051
 
         private void OnGUI()
         {
@@ -54,8 +67,8 @@ namespace Chris.Gameplay.Mod.Editor
 
         private static void CreateCachedEditor(ModExportConfig exportConfig, ref UEditor editor)
         {
-            ModExportConfigEditor.SetEditMode(exportConfig);
             UEditor.CreateCachedEditor(exportConfig, null, ref editor);
+            ((ModExportConfigEditor)editor).SetEditMode(true);
         }
 
         private static void DrawHeader()
@@ -118,12 +131,9 @@ namespace Chris.Gameplay.Mod.Editor
 
         private void DrawActionButtons()
         {
-            EditorGUILayout.Space(5);
-
             EditorGUILayout.BeginHorizontal();
 
             var isValid = _exportConfig != null && _exportConfig.Validate();
-
             using (new EditorGUI.DisabledScope(!isValid))
             {
                 // Create Group Button

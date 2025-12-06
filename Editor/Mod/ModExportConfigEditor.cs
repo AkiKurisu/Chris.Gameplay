@@ -19,8 +19,6 @@ namespace Chris.Gameplay.Mod.Editor
         private Texture2D _previewTexture;
         private bool _isEditMode;
         
-        private static ModExportConfig _editModeConfig;
-        
         private static class Styles
         {
             public static readonly GUIStyle HeaderStyle;
@@ -64,9 +62,10 @@ namespace Chris.Gameplay.Mod.Editor
         /// <summary>
         /// Set config to edit mode for ModExportWindow
         /// </summary>
-        public static void SetEditMode(ModExportConfig config)
+        /// <param name="isEditMode"></param>
+        public void SetEditMode(bool isEditMode)
         {
-            _editModeConfig = config;
+            _isEditMode = isEditMode;
         }
         
         private void OnEnable()
@@ -78,9 +77,6 @@ namespace Chris.Gameplay.Mod.Editor
             _descriptionProp = serializedObject.FindProperty("description");
             _iconDataProp = serializedObject.FindProperty("iconData");
             _customBuildersProp = serializedObject.FindProperty("customBuilders");
-            
-            // Check if this is edit mode (opened in ModExportWindow)
-            _isEditMode = _editModeConfig == _config;
             
             // Load preview texture from icon data
             LoadPreviewTexture();
@@ -100,13 +96,12 @@ namespace Chris.Gameplay.Mod.Editor
         {
             serializedObject.Update();
             
-            DrawFlowGraphButton();
-            
             if (_isEditMode)
             {
                 DrawBasicInfoEdit();
                 DrawDescriptionEdit();
                 DrawCustomBuildersEdit();
+                DrawFlowGraphButton();
                 DrawValidationInfo();
             }
             else
@@ -114,6 +109,7 @@ namespace Chris.Gameplay.Mod.Editor
                 DrawBasicInfoReadOnly();
                 DrawDescriptionReadOnly();
                 DrawCustomBuildersReadOnly();
+                DrawFlowGraphButton();
                 DrawOpenInWindowButton();
             }
             
@@ -135,7 +131,6 @@ namespace Chris.Gameplay.Mod.Editor
             }
             
             GUI.backgroundColor = originalColor;
-            EditorGUILayout.Space(5);
         }
         
         private void DrawBasicInfoEdit()
@@ -262,7 +257,7 @@ namespace Chris.Gameplay.Mod.Editor
             }
             else
             {
-                EditorGUILayout.LabelField(_config.description, EditorStyles.wordWrappedLabel, GUILayout.MinHeight(60));
+                EditorGUILayout.LabelField(_config.description, EditorStyles.wordWrappedLabel);
             }
             
             EditorGUILayout.EndVertical();
@@ -328,7 +323,7 @@ namespace Chris.Gameplay.Mod.Editor
         
         private void DrawValidationInfo()
         {
-            EditorGUILayout.Space(10);
+            GUILayout.FlexibleSpace();
             
             if (!_config.Validate())
             {
@@ -416,8 +411,6 @@ namespace Chris.Gameplay.Mod.Editor
         
         private void DrawOpenInWindowButton()
         {
-            EditorGUILayout.Space(10);
-            
             var originalColor = GUI.backgroundColor;
             GUI.backgroundColor = new Color(0.7f, 0.9f, 1f);
             
