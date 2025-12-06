@@ -10,12 +10,6 @@ namespace Chris.Gameplay.Mod.Editor
         void Build(ModExportConfig exportConfig, string buildPath);
         
         /// <summary>
-        /// Write meta data
-        /// </summary>
-        /// <param name="modInfo"></param>
-        void Write(ModInfo modInfo);
-        
-        /// <summary>
         /// Clean after build
         /// </summary>
         /// <param name="exportConfig"></param>

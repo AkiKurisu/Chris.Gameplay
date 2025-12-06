@@ -7,151 +7,205 @@ using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using Debug = UnityEngine.Debug;
+using UEditor = UnityEditor.Editor;
 
 namespace Chris.Gameplay.Mod.Editor
 {
     public class ModExportWindow : EditorWindow
     {
-        private delegate Vector2 BeginVerticalScrollViewFunc(Vector2 scrollPosition, bool alwaysShowVertical, GUIStyle verticalScrollbar, GUIStyle background, params GUILayoutOption[] options);
-        
-        private static BeginVerticalScrollViewFunc _beginVerticalScrollViewFunc;
-        
         private Vector2 _scrollPosition;
-        
+
         private ModExportConfig _exportConfig;
-        
-        private SerializedObject _exportConfigObject;
-        
-        private static BeginVerticalScrollViewFunc BeginVerticalScrollView
-        {
-            get
-            {
-                if (_beginVerticalScrollViewFunc == null)
-                {
-                    var methods = typeof(EditorGUILayout).GetMethods(BindingFlags.Static | BindingFlags.NonPublic).Where(x => x.Name == "BeginVerticalScrollView").ToArray();
-                    var method = methods.First(x => x.GetParameters()[1].ParameterType == typeof(bool));
-                    _beginVerticalScrollViewFunc = (BeginVerticalScrollViewFunc)method.CreateDelegate(typeof(BeginVerticalScrollViewFunc));
-                }
-                return _beginVerticalScrollViewFunc;
-            }
-        }
-        
+
+        private UEditor _configEditor;
+
         private static readonly FieldInfo MUseCustomPaths = typeof(BundledAssetGroupSchema).GetField("m_UseCustomPaths", BindingFlags.Instance | BindingFlags.NonPublic);
-        
+
         private static string ConfigGuidKey => Application.productName + "_ModConfigGUID";
-        
+
         [MenuItem("Tools/Chris/Mod Exporter")]
         public static void OpenEditor()
         {
             var window = GetWindow<ModExportWindow>("Mod Exporter");
-            window.minSize = new Vector2(400, 300);
+            window.minSize = new Vector2(700, 800);
         }
-        
+
+        public static void OpenWithConfig(ModExportConfig config)
+        {
+            var window = GetWindow<ModExportWindow>("Mod Exporter");
+            window.minSize = new Vector2(700, 800);
+            window._exportConfig = config;
+            EditorPrefs.SetString(ConfigGuidKey, GetGuid(config));
+            CreateCachedEditor(config, ref window._configEditor);
+            window.Repaint();
+        }
+
         private void OnGUI()
         {
-            _scrollPosition = BeginVerticalScrollView(_scrollPosition, false, GUI.skin.verticalScrollbar, "OL Box");
-            ShowExportEditor();
+            DrawHeader();
+
+            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
+            DrawConfigSelector();
+            DrawConfigInspector();
             EditorGUILayout.EndScrollView();
-            GUILayout.BeginVertical();
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            var orgColor = GUI.backgroundColor;
-            if (GUILayout.Button(new GUIContent("Select Export Config", "Select Export Config")))
+
+            DrawActionButtons();
+        }
+
+        private static void CreateCachedEditor(ModExportConfig exportConfig, ref UEditor editor)
+        {
+            ModExportConfigEditor.SetEditMode(exportConfig);
+            UEditor.CreateCachedEditor(exportConfig, null, ref editor);
+        }
+
+        private static void DrawHeader()
+        {
+            EditorGUILayout.HelpBox($"Mod Export Tool\nCurrent Platform: {EditorUserBuildSettings.activeBuildTarget}", MessageType.Info);
+            EditorGUILayout.Space(5);
+        }
+
+        private void DrawConfigSelector()
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUI.BeginChangeCheck();
+            var newConfig = EditorGUILayout.ObjectField("Export Config", _exportConfig, typeof(ModExportConfig), false) as ModExportConfig;
+            if (EditorGUI.EndChangeCheck() && newConfig)
+            {
+                _exportConfig = newConfig;
+                EditorPrefs.SetString(ConfigGuidKey, GetGuid(_exportConfig));
+                CreateCachedEditor(_exportConfig, ref _configEditor);
+            }
+
+            if (GUILayout.Button("Browse...", GUILayout.Width(80)))
             {
                 string path = EditorUtility.OpenFilePanel("Select export config", Application.dataPath, "asset");
                 if (!string.IsNullOrEmpty(path))
                 {
                     path = path.Replace(Application.dataPath, string.Empty);
-                    var config = AssetDatabase.LoadAssetAtPath($"Assets/{path}", typeof(ModExportConfig)) as ModExportConfig;
+                    var config = AssetDatabase.LoadAssetAtPath($"Assets{path}", typeof(ModExportConfig)) as ModExportConfig;
                     if (config != null)
                     {
                         _exportConfig = config;
-                        _exportConfigObject = new SerializedObject(_exportConfig);
+                        EditorPrefs.SetString(ConfigGuidKey, GetGuid(_exportConfig));
+                        CreateCachedEditor(_exportConfig, ref _configEditor);
                     }
                     else
                     {
-                        ShowNotification(new GUIContent($"Invalid path: Assets/{path}, please pick export config"));
+                        ShowNotification(new GUIContent($"Invalid path: Assets{path}"));
                     }
                 }
             }
-            GUI.enabled = _exportConfig.Validate();
-            if (GUILayout.Button("Create Group", GUILayout.MinWidth(100)))
-            {
-                var group = _exportConfig.Group;
-                //Set not include in packed build
-                var schema = group.GetSchema<BundledAssetGroupSchema>();
-                schema.IncludeInBuild = false;
-                schema.BuildPath.SetVariableByName(AddressableAssetSettingsDefaultObject.Settings, AddressableAssetSettings.kRemoteBuildPath);
-                schema.LoadPath.SetVariableByName(AddressableAssetSettingsDefaultObject.Settings, AddressableAssetSettings.kRemoteLoadPath);
-#pragma warning disable UNT0018 // System.Reflection features in performance critical messages
-                MUseCustomPaths.SetValue(schema, false);
-#pragma warning restore UNT0018 // System.Reflection features in performance critical messages
-            }
-            GUI.backgroundColor = new Color(253 / 255f, 163 / 255f, 255 / 255f);
-            if (GUILayout.Button("Export", GUILayout.MinWidth(100)))
-            {
-                new ModExporter(_exportConfig).Export();
-                Process.Start(ModExporter.ExportPath);
-                EditorUtility.SetDirty(_exportConfig);
-                AssetDatabase.SaveAssets();
-            }
-            GUI.enabled = true;
-            GUI.backgroundColor = orgColor;
-            GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
+            EditorGUILayout.EndHorizontal();
         }
-        
-        private void DrawExportConfig()
+
+        private void DrawConfigInspector()
         {
-            EditorGUI.BeginChangeCheck();
-            GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical();
-            EditorGUILayout.PropertyField(_exportConfigObject.FindProperty("authorName"), true);
-            EditorGUILayout.PropertyField(_exportConfigObject.FindProperty("modName"), true);
-            EditorGUILayout.PropertyField(_exportConfigObject.FindProperty("version"), true);
-            GUILayout.EndVertical();
-            _exportConfig.modIcon = (Texture2D)EditorGUILayout.ObjectField("Icon", _exportConfig.modIcon, typeof(Texture2D), false);
-            GUILayout.EndHorizontal();
-            EditorGUILayout.PropertyField(_exportConfigObject.FindProperty("description"), true);
-            EditorGUILayout.PropertyField(_exportConfigObject.FindProperty("customBuilders"), true);
-            if (EditorGUI.EndChangeCheck())
+            if (_exportConfig != null)
             {
-                _exportConfigObject.ApplyModifiedProperties();
-            }
-        }
-        
-        private void ShowExportEditor()
-        {
-            EditorGUILayout.HelpBox($"Export your Mod.\nCurrent Platform: {EditorUserBuildSettings.activeBuildTarget}", MessageType.Info);
-            if (_exportConfig == null)
-            {
-                _exportConfig = LoadExportConfig();
-                _exportConfigObject = new SerializedObject(_exportConfig);
-            }
-            _exportConfigObject ??= new SerializedObject(_exportConfig);
-            var newConfig = EditorGUILayout.ObjectField("Export Config", _exportConfig, typeof(ModExportConfig), false) as ModExportConfig;
-            if (newConfig != _exportConfig && newConfig != null)
-            {
-                _exportConfig = newConfig;
-                _exportConfigObject = new SerializedObject(_exportConfig);
-                EditorPrefs.SetString(ConfigGuidKey, GetGuid(_exportConfig));
-            }
-            DrawExportConfig();
-            if (_exportConfig.customBuilders != null)
-            {
-                foreach (var customBuilder in _exportConfig.customBuilders)
+                if (_configEditor == null)
                 {
-                    var builder = customBuilder.GetObject();
-                    if (string.IsNullOrEmpty(builder?.Description)) continue;
-                    GUILayout.Label($"Custom builder {builder.GetType().Name} in use");
-                    GUILayout.Label(builder.Description, new GUIStyle(GUI.skin.label) { wordWrap = true });
+                    CreateCachedEditor(_exportConfig, ref _configEditor);
+                }
+
+                if (_configEditor != null)
+                {
+                    EditorGUILayout.BeginVertical(GUI.skin.box);
+                    _configEditor.OnInspectorGUI();
+                    EditorGUILayout.EndVertical();
                 }
             }
         }
-        
+
+        private void DrawActionButtons()
+        {
+            EditorGUILayout.Space(5);
+
+            EditorGUILayout.BeginHorizontal();
+
+            var isValid = _exportConfig != null && _exportConfig.Validate();
+
+            using (new EditorGUI.DisabledScope(!isValid))
+            {
+                // Create Group Button
+                var createGroupColor = new Color(0.7f, 0.9f, 1f);
+                GUI.backgroundColor = createGroupColor;
+                if (GUILayout.Button(new GUIContent("Create Addressable Group",
+                    "Create or update the Addressable Asset Group for this mod"),
+                    GUILayout.Height(35)))
+                {
+                    CreateAddressableGroup();
+                }
+
+                // Export Button
+                GUI.backgroundColor = new Color(253 / 255f, 163 / 255f, 255 / 255f);
+                if (GUILayout.Button(new GUIContent("Export Mod", "Export the mod to the output directory"),
+                    GUILayout.Height(35), GUILayout.MinWidth(120)))
+                {
+                    ExportMod();
+                }
+                GUI.backgroundColor = Color.white;
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void CreateAddressableGroup()
+        {
+            var group = _exportConfig.GetOrCreateAssetGroup();
+            // Set not include in packed build
+            var schema = group.GetSchema<BundledAssetGroupSchema>();
+            schema.IncludeInBuild = false;
+            schema.BuildPath.SetVariableByName(AddressableAssetSettingsDefaultObject.Settings,
+                AddressableAssetSettings.kRemoteBuildPath);
+            schema.LoadPath.SetVariableByName(AddressableAssetSettingsDefaultObject.Settings,
+                AddressableAssetSettings.kRemoteLoadPath);
+#pragma warning disable UNT0018 // System.Reflection features in performance critical messages
+            MUseCustomPaths.SetValue(schema, false);
+#pragma warning restore UNT0018 // System.Reflection features in performance critical messages
+
+            EditorUtility.DisplayDialog("Success",
+                $"Addressable group 'Mod_{_exportConfig.modName}' created/updated successfully!",
+                "OK");
+        }
+
+        private void ExportMod()
+        {
+            new ModExporter(_exportConfig).Export();
+            Process.Start(ModExporter.ExportPath);
+            EditorUtility.SetDirty(_exportConfig);
+            AssetDatabase.SaveAssets();
+
+            ShowNotification(new GUIContent("Export completed!"));
+        }
+
+        private void OnEnable()
+        {
+            if (_exportConfig == null)
+            {
+                _exportConfig = LoadExportConfig();
+            }
+
+            if (_exportConfig && !_configEditor)
+            {
+                CreateCachedEditor(_exportConfig, ref _configEditor);
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (_configEditor)
+            {
+                DestroyImmediate(_configEditor);
+            }
+
+            _configEditor = null;
+        }
+
         private static ModExportConfig LoadExportConfig()
         {
-            var configs = AssetDatabase.FindAssets($"t:{typeof(ModExportConfig)}").Select(x => AssetDatabase.LoadAssetAtPath<ModExportConfig>(AssetDatabase.GUIDToAssetPath(x))).ToArray();
+            var configs = AssetDatabase.FindAssets($"t:{typeof(ModExportConfig)}")
+                .Select(x => AssetDatabase.LoadAssetAtPath<ModExportConfig>(AssetDatabase.GUIDToAssetPath(x)))
+                .ToArray();
             ModExportConfig config = null;
             if (configs.Length != 0)
             {
@@ -163,7 +217,7 @@ namespace Chris.Gameplay.Mod.Editor
                     EditorPrefs.SetString(ConfigGuidKey, GetGuid(config));
                 }
             }
-            if (config == null)
+            if (!config)
             {
                 config = CreateInstance<ModExportConfig>();
                 string settingsPath = "Assets/ModExportConfig.asset";
@@ -173,7 +227,7 @@ namespace Chris.Gameplay.Mod.Editor
             }
             return config;
         }
-        
+
         private static string GetGuid(Object asset)
         {
             return AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset));

@@ -87,13 +87,9 @@ namespace Chris.Gameplay.Mod.Editor
                 description = _exportConfig.description,
                 modName = _exportConfig.modName,
                 version = _exportConfig.version,
-                modIconBytes = _exportConfig.modIcon != null ? _exportConfig.modIcon.EncodeToPNG() : Array.Empty<byte>(),
+                modIconBytes = _exportConfig.iconData ?? Array.Empty<byte>(),
                 apiVersion = ModConfig.Get().ApiVersion
             };
-            foreach (var builder in _builders)
-            {
-                builder.Write(info);
-            }
             var stream = JsonConvert.SerializeObject(info);
             File.WriteAllText(buildPath + "/ModConfig.cfg", stream);
         }
@@ -111,6 +107,7 @@ namespace Chris.Gameplay.Mod.Editor
             {
                 builder.Build(_exportConfig, dynamicBuildPath);
             }
+            _exportConfig.Flow_OnBuild(dynamicBuildPath);
         }
         
         private void CleanupPipeline()
@@ -119,6 +116,7 @@ namespace Chris.Gameplay.Mod.Editor
             {
                 builder.Cleanup(_exportConfig);
             }
+            _exportConfig.Flow_OnCleanup();
         }
 
         private class LazyDirectory

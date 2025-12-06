@@ -30,7 +30,7 @@ namespace Chris.Gameplay.Mod.Editor
             AddressableAssetSettingsDefaultObject.Settings.RemoteCatalogBuildPath.SetVariableByName(AddressableAssetSettingsDefaultObject.Settings, AddressableAssetSettings.kRemoteBuildPath);
             AddressableAssetSettingsDefaultObject.Settings.RemoteCatalogLoadPath.SetVariableByName(AddressableAssetSettingsDefaultObject.Settings, AddressableAssetSettings.kRemoteLoadPath);
             _includeInBuildMap = new Dictionary<BundledAssetGroupSchema, bool>();
-            string groupName = exportConfig.Group.Name;
+            string groupName = exportConfig.GetOrCreateAssetGroup().Name;
             foreach (var group in AddressableAssetSettingsDefaultObject.Settings.groups)
             {
                 if (group.HasSchema<BundledAssetGroupSchema>())
@@ -48,7 +48,7 @@ namespace Chris.Gameplay.Mod.Editor
                 }
             }
             {
-                var settings = exportConfig.Group.Settings;
+                var settings = exportConfig.GetOrCreateAssetGroup().Settings;
                 settings.profileSettings.SetValue(settings.activeProfileId, "Remote.LoadPath", ModAPI.DynamicLoadPath);
                 settings.profileSettings.SetValue(settings.activeProfileId, "Remote.BuildPath", buildPath);
             }
@@ -56,10 +56,11 @@ namespace Chris.Gameplay.Mod.Editor
 
         public void Cleanup(ModExportConfig exportConfig)
         {
-            //Reset build setting
+            // Reset build setting
             AddressableAssetSettingsDefaultObject.Settings.BuildRemoteCatalog = _buildRemoteCatalog;
-            //Exclude all mod groups
-            string groupName = exportConfig.Group.Name;
+            
+            // Exclude all mod groups
+            string groupName = exportConfig.GetOrCreateAssetGroup().Name;
             foreach (var group in AddressableAssetSettingsDefaultObject.Settings.groups)
             {
                 if (group.HasSchema<BundledAssetGroupSchema>())
@@ -199,7 +200,5 @@ namespace Chris.Gameplay.Mod.Editor
 #endif
             }
         }
-
-        public void Write(ModInfo modInfo) { }
     }
 }
