@@ -272,7 +272,7 @@ namespace Chris.Gameplay.Mod.Editor
             EditorGUILayout.PropertyField(_customBuildersProp, true);
             
             // Display custom builder information
-            if (_config.customBuilders != null && _config.customBuilders.Length > 0)
+            if (_config.customBuilders is { Length: > 0 })
             {
                 EditorGUILayout.Space(5);
                 EditorGUILayout.LabelField("Active Builders:", EditorStyles.boldLabel);
@@ -280,11 +280,11 @@ namespace Chris.Gameplay.Mod.Editor
                 foreach (var customBuilder in _config.customBuilders)
                 {
                     var builder = customBuilder?.GetObject();
-                    if (builder != null && !string.IsNullOrEmpty(builder.Description))
+                    if (builder != null)
                     {
                         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                         EditorGUILayout.LabelField($"● {builder.GetType().Name}", EditorStyles.boldLabel);
-                        EditorGUILayout.LabelField(builder.Description, Styles.InfoLabelStyle);
+                        EditorGUILayout.LabelField(string.IsNullOrEmpty(builder.Description) ? "No Description" : builder.Description, Styles.InfoLabelStyle);
                         EditorGUILayout.EndVertical();
                     }
                 }
@@ -310,10 +310,7 @@ namespace Chris.Gameplay.Mod.Editor
                 {
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                     EditorGUILayout.LabelField($"● {builder.GetType().Name}", EditorStyles.boldLabel);
-                    if (!string.IsNullOrEmpty(builder.Description))
-                    {
-                        EditorGUILayout.LabelField(builder.Description, Styles.InfoLabelStyle);
-                    }
+                    EditorGUILayout.LabelField(string.IsNullOrEmpty(builder.Description) ? "No Description" : builder.Description, Styles.InfoLabelStyle);
                     EditorGUILayout.EndVertical();
                 }
             }

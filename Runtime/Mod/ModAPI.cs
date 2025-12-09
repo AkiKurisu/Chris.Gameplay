@@ -1,28 +1,16 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using R3;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-#if (UNITY_6000_0_OR_NEWER && !ENABLE_JSON_CATALOG)
-using UnityEngine.AddressableAssets.ResourceLocators;
-using UnityEngine.ResourceManagement.Util;
-#else
-using System.Text;
-#endif
 
 namespace Chris.Gameplay.Mod
 {
     public static class ModAPI
     {
         internal const string DefaultAPIVersion = "0.1.0";
-
-        internal const string DynamicLoadPath = "{LOCAL_MOD_PATH}";
 
         /// <summary>
         /// Default mod loading directory path.
@@ -32,7 +20,7 @@ namespace Chris.Gameplay.Mod
 #else
         public static readonly string LoadingPath = Path.Combine(Path.GetDirectoryName(Application.dataPath)!, "Mods");
 #endif
-        
+
         private static readonly ReactiveProperty<bool> InitializedProperty = new(false);
 
         private static readonly Subject<Unit> RefreshSubject = new();
@@ -57,7 +45,7 @@ namespace Chris.Gameplay.Mod
         /// <param name="modConfig"></param>
         /// <param name="modLoader"></param>
         /// <returns></returns>
-        public static async UniTask Initialize(ModConfig modConfig, IModLoader modLoader = default)
+        public static async UniTask Initialize(ModConfig modConfig, IModLoader modLoader = null)
         {
             if (InitializedProperty.Value)
             {
@@ -170,141 +158,6 @@ namespace Chris.Gameplay.Mod
             Directory.Delete(modInfo.FilePath, true);
         }
 
-        private static string GetCatalogExtension()
-        {
-#if (UNITY_6000_0_OR_NEWER && !ENABLE_JSON_CATALOG)
-            return ".bin";
-#else
-            return ".json";
-#endif
-        }
-        
-        /// <summary>
-        /// Load mod Addressables content catalog from path
-        /// </summary>
-        /// <param name="path">Can be mod folder path or catalog path</param>
-        /// <returns></returns>
-        public static async UniTask<bool> LoadModCatalogAsync(string path)
-        {
-            if (!Directory.Exists(path))
-            {
-                return false;
-            }
-            
-            string catalogPath = Path.Combine(path, $"catalog{GetCatalogExtension()}");
-            if (File.Exists(catalogPath))
-            {
-                path = catalogPath;
-            }
-            else
-            {
-                Debug.LogError($"[Mod API] No catalog file found in {path}");
-                return false;
-            }
-
-            path = path.Replace(@"\", "/");
-            string actualPath = Path.GetDirectoryName(path)!.Replace(@"\", "/");
-
-            try
-            {
-#if (UNITY_6000_0_OR_NEWER && !ENABLE_JSON_CATALOG)
-                await ProcessBinaryCatalog(path, actualPath);
-#else
-                await ProcessJsonCatalog(path, actualPath);
-#endif
-                return true;
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[Mod API] Unexpected error during process catalog {path}: {e.Message}");
-                return false;
-            }
-        }
-
-#if (UNITY_6000_0_OR_NEWER && !ENABLE_JSON_CATALOG)
-        private static async Task ProcessBinaryCatalog(string path, string actualPath)
-        {
-            // Load the binary catalog
-            var data = await File.ReadAllBytesAsync(path);
-            var reader = new BinaryStorageBuffer.Reader(data, 1024, 1024, new ContentCatalogData.Serializer().WithInternalIdResolvingDisabled());
-            var catalogData = reader.ReadObject<ContentCatalogData>(0, out _, false);
-
-            // Create locator to access catalog data
-            var locator = catalogData.CreateCustomLocator();
-
-            // Build a map of primary key to location and keys
-            var pkToLoc = new Dictionary<string, (UnityEngine.ResourceManagement.ResourceLocations.IResourceLocation, HashSet<object>)>();
-            foreach (var key in locator.Keys)
-            {
-                if (locator.Locate(key, typeof(object), out var locs))
-                {
-                    foreach (var loc in locs)
-                    {
-                        if (!pkToLoc.TryGetValue(loc.PrimaryKey, out var locKeys))
-                            pkToLoc.Add(loc.PrimaryKey, locKeys = (loc, new HashSet<object>()));
-                        locKeys.Item2.Add(key);
-                    }
-                }
-            }
-
-            // Create new modified entries
-            var modifiedEntries = new List<ContentCatalogDataEntry>();
-            foreach (var kvp in pkToLoc)
-            {
-                var loc = kvp.Value.Item1;
-                string modifiedInternalId = loc.InternalId.Replace(DynamicLoadPath, actualPath);
-
-                // Collect dependencies
-                List<object> deps = null;
-                if (loc.HasDependencies)
-                {
-                    deps = new List<object>();
-                    foreach (var d in loc.Dependencies)
-                        deps.Add(d.PrimaryKey);
-                }
-
-                // Create new entry with modified InternalId
-                var newEntry = new ContentCatalogDataEntry(
-                    loc.ResourceType,
-                    modifiedInternalId,
-                    loc.ProviderId,
-                    kvp.Value.Item2,
-                    deps,
-                    loc.Data
-                );
-                modifiedEntries.Add(newEntry);
-            }
-
-            // Create new catalog with modified data
-            var newCatalog = new ContentCatalogData(catalogData.ProviderId)
-            {
-                BuildResultHash = catalogData.BuildResultHash,
-                InstanceProviderData = catalogData.InstanceProviderData,
-                SceneProviderData = catalogData.SceneProviderData,
-                ResourceProviderData = catalogData.ResourceProviderData
-            };
-            new ContentCatalogDataWrapper(newCatalog).SetData(modifiedEntries);
-
-            // Serialize and save
-            var wr = new BinaryStorageBuffer.Writer(0, new ContentCatalogData.Serializer());
-            wr.WriteObject(newCatalog, false);
-            await File.WriteAllBytesAsync(path, wr.SerializeToByteArray());
-            Debug.Log($"[Mod API] Load mod binary content catalog {path}");
-            await Addressables.LoadContentCatalogAsync(path).ToUniTask();
-            await File.WriteAllBytesAsync(path, data);
-        }
-#else
-        private static async Task ProcessJsonCatalog(string path, string actualPath)
-        {
-            string contentCatalog = await File.ReadAllTextAsync(path, Encoding.UTF8);
-            string modifiedCatalog = contentCatalog.Replace(DynamicLoadPath, actualPath);
-            await File.WriteAllTextAsync(path, modifiedCatalog, Encoding.UTF8);
-            Debug.Log($"[Mod API] Load mod json content catalog {path}");
-            await Addressables.LoadContentCatalogAsync(path).ToUniTask();
-            await File.WriteAllTextAsync(path, contentCatalog, Encoding.UTF8);
-        }
-#endif
-
         /// <summary>
         /// Load <see cref="ModInfo"/> from path
         /// </summary>
@@ -316,29 +169,5 @@ namespace Chris.Gameplay.Mod
             modInfo.FilePath = Path.GetDirectoryName(modInfoPath)!.Replace(@"\", "/");
             return modInfo;
         }
-        
-#if (UNITY_6000_0_OR_NEWER && !ENABLE_JSON_CATALOG)
-        private readonly struct ContentCatalogDataWrapper
-        {
-            private static readonly FieldInfo EntriesFieldInfo;
-
-            private readonly ContentCatalogData _catalog;
-            
-            static ContentCatalogDataWrapper()
-            {
-                EntriesFieldInfo = typeof(ContentCatalogData).GetField("m_Entries", BindingFlags.Instance | BindingFlags.NonPublic);
-            }
-
-            public ContentCatalogDataWrapper(ContentCatalogData catalogData)
-            {
-                _catalog = catalogData;
-            }
-
-            public void SetData(IList<ContentCatalogDataEntry> entries)
-            {
-                EntriesFieldInfo.SetValue(_catalog, entries);
-            }
-        }
-#endif
     }
 }

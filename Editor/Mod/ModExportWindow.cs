@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Reflection;
 using System.Linq;
+using Chris.Resource.Editor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
@@ -24,7 +25,7 @@ namespace Chris.Gameplay.Mod.Editor
 
         private static string ConfigGuidKey => Application.productName + "_ModConfigGUID";
 
-        [MenuItem("Tools/Chris/Mod Exporter")]
+        [MenuItem("Tools/Chris/Mod/Mod Exporter", false, 100)]
         public static void OpenEditor()
         {
             var window = GetWindow<ModExportWindow>("Mod Exporter");
@@ -161,7 +162,7 @@ namespace Chris.Gameplay.Mod.Editor
 
         private void CreateAddressableGroup()
         {
-            var group = _exportConfig.GetOrCreateAssetGroup();
+            var group = _exportConfig.CreateAssetGroup();
             // Set not include in packed build
             var schema = group.GetSchema<BundledAssetGroupSchema>();
             schema.IncludeInBuild = false;
@@ -180,8 +181,8 @@ namespace Chris.Gameplay.Mod.Editor
 
         private void ExportMod()
         {
-            new ModExporter(_exportConfig).Export();
-            Process.Start(ModExporter.ExportPath);
+            _exportConfig.CreateResourceExporter().Export();
+            Process.Start(ResourceExporter.ExportPath);
             EditorUtility.SetDirty(_exportConfig);
             AssetDatabase.SaveAssets();
 
@@ -190,7 +191,7 @@ namespace Chris.Gameplay.Mod.Editor
 
         private void OnEnable()
         {
-            if (_exportConfig == null)
+            if (!_exportConfig)
             {
                 _exportConfig = LoadExportConfig();
             }

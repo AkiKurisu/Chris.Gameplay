@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using Chris.Resource;
 using Cysharp.Threading.Tasks;
 
 namespace Chris.Gameplay.Mod
@@ -72,7 +73,7 @@ namespace Chris.Gameplay.Mod
             }
             foreach (var directory in directoryPaths)
             {
-                await ModAPI.LoadModCatalogAsync(directory);
+                await ResourceSystem.LoadCatalogAsync(directory);
             }
             return true;
         }
@@ -100,7 +101,8 @@ namespace Chris.Gameplay.Mod
                 ModAPI.DeleteModFromDisk(modInfo);
                 return null;
             }
-            await ModAPI.LoadModCatalogAsync(path);
+            
+            await ResourceSystem.LoadCatalogAsync(path);
             return modInfo;
         }
     }
