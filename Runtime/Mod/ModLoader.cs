@@ -30,12 +30,14 @@ namespace Chris.Gameplay.Mod
                 Directory.CreateDirectory(modPath);
                 return true;
             }
-            ModAPI.UnZipAll(modPath, true);
+            
+            await ModAPI.UnZipAllAsync(modPath, true);
             var directories = Directory.GetDirectories(modPath, "*", SearchOption.AllDirectories);
             if (directories.Length == 0)
             {
                 return true;
             }
+            
             List<string> configPaths = new();
             List<string> directoryPaths = new();
             foreach (var directory in directories)

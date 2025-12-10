@@ -149,6 +149,26 @@ namespace Chris.Gameplay.Mod
         }
 
         /// <summary>
+        /// Unzip all zip files from <see cref="path"/> asynchronously using multithreading
+        /// </summary>
+        /// <param name="path">The root directory path</param>
+        /// <param name="allDirectories">Whether to search all directories</param>
+        public static async UniTask UnZipAllAsync(string path, bool allDirectories)
+        {
+            var zips = Directory.GetFiles(path, "*.zip", allDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly).ToList();
+
+            // Create parallel unzip tasks
+            var tasks = zips.Select(zip => UniTask.RunOnThreadPool(() =>
+            {
+                ZipWrapper.UnzipFile(zip, Path.GetDirectoryName(zip));
+                File.Delete(zip);
+            })).ToArray();
+
+            // Wait for all tasks to complete
+            await UniTask.WhenAll(tasks);
+        }
+
+        /// <summary>
         /// Delete mod files from disk, is not safe when is already initialized,
         /// recommend to use <see cref="DeleteMod"/> to delete mod on next launcher
         /// </summary>
